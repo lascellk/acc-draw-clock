@@ -51,19 +51,52 @@ To use your own sounds, add `start.mp3`, `warning.mp3` and `end.mp3` to `display
 
 ## 4. Kiosk devices
 
-### Raspberry Pi (Pi OS Bookworm, desktop)
-1. Copy `display/` to `/home/pi/acc-clock/`.
-2. `sudo raspi-config` → Display Options → Screen Blanking → **Off**.
-3. Add the line below to `~/.config/labwc/autostart` (Bookworm's default compositor). On older Wayfire images, use `~/.config/wayfire.ini` `[autostart]` instead.
+The **Raspberry Pi 4** is the main display device. The Android box is the spare. The Pi was chosen because:
+- Chromium's kiosk flag removes the browser's sound block completely.
+- It can be updated over SSH.
+- Its GPIO pins can drive a horn relay later.
+- It doesn't install surprise firmware updates or show pop-ups.
+
+### Raspberry Pi 4
+
+#### 1. Install the OS
+Use the standard **Raspberry Pi OS (64-bit) with desktop**: not Lite (it has no desktop or browser) and not Full (it adds apps we don't need).
+
+1. On a PC, install **Raspberry Pi Imager** from <https://www.raspberrypi.com/software/>.
+2. Choose:
+   - Device: **Raspberry Pi 4**
+   - OS: **Raspberry Pi OS (64-bit)**
+   - Storage: a good 32 GB card, such as a SanDisk High Endurance or a Samsung PRO Endurance. Keep a spare.
+3. At **OS customisation**, click **Edit settings**:
+   - Hostname: `acc-clock`
+   - Username / password: record these with the club's admin notes
+   - Wi-Fi: the rink's network (wired Ethernet is more reliable if there's a jack)
+   - Locale: time zone `America/Toronto`, keyboard `us`
+   - Services: enable **SSH** with password login
+4. Write the card. Connect the TV by HDMI and the powered speaker to the **3.5 mm jack**, then boot. The first boot takes a few minutes.
+5. Check you can reach it from a PC on the same network: `ssh <user>@acc-clock.local`
+
+#### 2. Set up the kiosk
+A setup script for this is planned. Until it exists, do it by hand:
+1. Copy `display/` to `~/acc-clock/` on the Pi, for example with `scp -r display <user>@acc-clock.local:~/acc-clock`.
+2. Run `sudo raspi-config`:
+   - Display Options → Screen Blanking → **Off**
+   - System Options → Audio → **Headphones**
+3. Add the line below to `~/.config/labwc/autostart`. Newer releases (based on Debian "Trixie") name the browser `chromium`; older Bookworm releases call it `chromium-browser`. Run `which chromium chromium-browser` to see which one you have.
    ```
-   chromium-browser --kiosk --noerrdialogs --disable-infobars --incognito \
+   chromium --kiosk --noerrdialogs --disable-infobars --incognito \
      --autoplay-policy=no-user-gesture-required \
      --allow-file-access-from-files \
-     file:///home/pi/acc-clock/index.html
+     file:///home/<user>/acc-clock/index.html
    ```
-4. Plug the powered speaker into the 3.5 mm jack or use HDMI audio. Pick the output from the volume icon on the taskbar.
+4. Reboot. The clock should come up fullscreen. Use `?demo=1&warn=0.5` to check the colours and sounds.
 
-### Android TV box
+#### 3. Protect against power cuts
+Once everything works, turn on **`sudo raspi-config` → Performance → Overlay File System**. Then a power cut can't corrupt the SD card, but changes are lost on reboot. To update the files later, turn the overlay off, reboot, make the change, then turn it back on.
+
+Use the official Pi 4 power supply. An underpowered Pi gets unreliable.
+
+### Android TV box (spare)
 Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
 - Start URL: `file:///sdcard/acc-clock/index.html`
 - Launch on boot: on
@@ -72,6 +105,12 @@ Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
 
 ## How it behaves
 - The display checks the server every 5 s. It works out the countdown itself from `endsAt` plus the server clock offset, so if the internet drops mid-draw the clock keeps going. A small "Offline" note shows in the corner.
-- Background colours: navy while running, blue before a delayed start, yellow at the warning, red flashing at zero. When nothing is running, it shows the time of day.
+- Background colours (club palette):
+  - Dark navy while running, with cream digits.
+  - Lighter navy before a delayed start.
+  - **Bright yellow with black digits** at the warning: the last 15 min, or whatever `WARNING_MIN` is set to.
+  - **Club red with blinking white `00:00`** at time up, plus how long it's been over.
+  - When nothing is running, it shows the club logo and the time of day.
+- The **Buzzer** checkbox on the control page mutes or unmutes the TV's sounds. It's on by default and stays as set across draws.
 - Sounds only play on changes the display sees as they happen, so rebooting the TV mid-draw won't sound the start horn again.
 - The control page shows the same countdown as the display. It also has Start now / in 5-10-15 min, Pause/Resume, ±1 min and Stop.
