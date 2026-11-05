@@ -91,7 +91,33 @@ A setup script for this is planned. Until it exists, do it by hand:
    ```
 4. Reboot. The clock should come up fullscreen. Use `?demo=1&warn=0.5` to check the colours and sounds.
 
-#### 3. Protect against power cuts
+#### 3. Network: build at home, run at the club
+The Pi is set up on a home network, then moved to the rink. Options, best first:
+
+**A. Wi-Fi extender as an Ethernet bridge (preferred)**
+The extender joins the club Wi-Fi, and the Pi plugs into the extender's Ethernet port. The Pi just sees a wired network, so it needs no club-specific settings and can be finished completely at home.
+- The extender must be in **Extender / Repeater** mode, not **Access Point** mode (Access Point mode expects an incoming cable). Check that its Ethernet port gives internet in that mode.
+- Place the extender where the club Wi-Fi signal is strong, and run a cable to the Pi.
+- At home: set the extender up on the home Wi-Fi, plug the Pi in, and check that a draw started from a phone shows on the TV. Also unplug the extender and plug it back in, to check it reconnects on its own after a power cut.
+- At the club: use the extender's app to switch it to the club Wi-Fi. The Pi needs no changes.
+
+**B. Pi on the club Wi-Fi directly**
+Before leaving home, add the club network so the Pi joins it automatically at the rink. It's saved even though that network isn't in range:
+```
+sudo nmcli connection add type wifi con-name ACC-Club ifname wlan0 \
+  ssid "<club wifi name>" wifi-sec.key-mgmt wpa-psk wifi-sec.psk "<club wifi password>" \
+  connection.autoconnect yes
+```
+`sudo nmtui` does the same thing through a menu. It's worth doing with option A too, as a backup: the Pi prefers Ethernet when it's connected and falls back to the club Wi-Fi if the extender dies.
+
+**At the club**
+- Bring a USB keyboard. If the Pi doesn't get online, press **Ctrl+Alt+T** for a terminal and run `sudo nmtui` to fix the Wi-Fi details.
+- If the club Wi-Fi has a **login or "accept terms" page**, neither the Pi nor the extender can click through it. You'd need a network without one, or have the device's address put on an allow list.
+- If the network drops mid-draw, the clock keeps counting and shows "Offline" in the corner. It won't see button presses from phones until it reconnects.
+
+#### 4. Protect against power cuts
+Do this **last**: after any club Wi-Fi has been added (option B) and the Pi has worked at the club. With the overlay on, network and other changes are lost on reboot.
+
 Once everything works, turn on **`sudo raspi-config` → Performance → Overlay File System**. Then a power cut can't corrupt the SD card, but changes are lost on reboot. To update the files later, turn the overlay off, reboot, make the change, then turn it back on.
 
 Use the official Pi 4 power supply. An underpowered Pi gets unreliable.
