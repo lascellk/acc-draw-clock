@@ -23,6 +23,7 @@ const PRESETS = [
 const DEFAULT_WARNING_MIN = 15;
 const MAX_DELAY_MIN = 120;
 const STATE_KEY = 'STATE';
+const BUZZER_KEY = 'BUZZER'; // 'off' mutes the display; anything else (incl. unset) = on
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -96,6 +97,10 @@ function command(pin, cmd, arg) {
       case 'stop':
         s = idleState_();
         break;
+      case 'buzzer':
+        // Kept outside the draw state so it survives Stop / new draws.
+        PropertiesService.getScriptProperties().setProperty(BUZZER_KEY, arg.on ? 'on' : 'off');
+        break;
       default:
         throw new Error('Unknown command: ' + cmd);
     }
@@ -134,6 +139,7 @@ function saveState_(s) {
 
 function publicState_() {
   const s = loadState_();
+  s.buzzer = getProp_(BUZZER_KEY) !== 'off';
   s.serverNow = Date.now();
   return s;
 }

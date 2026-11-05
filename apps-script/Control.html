@@ -53,6 +53,10 @@
 
     #pinRow label { display: flex; align-items: center; gap: 10px; font-weight: 600; }
     #pinRow label { color: var(--navy); }
+
+    .toggle { display: flex; align-items: center; gap: 14px; font-size: 18px; font-weight: 600; color: var(--navy); cursor: pointer; }
+    .toggle input { width: 28px; height: 28px; margin: 0; flex: none; accent-color: var(--navy); }
+    .toggle small { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
     #pin { flex: 1; font-size: 20px; padding: 10px; border: 1px solid var(--gold); border-radius: 10px; }
 
     #toast {
@@ -101,6 +105,13 @@
     </div>
   </section>
 
+  <section class="card">
+    <label class="toggle">
+      <input type="checkbox" id="buzzer" checked>
+      <span>Buzzer<small>Start, warning and time-up sounds on the TV</small></span>
+    </label>
+  </section>
+
   <div id="toast"></div>
 
 <script>
@@ -146,6 +157,13 @@
     if (confirm('Stop the clock?')) send('stop');
   };
 
+  // While a change is in flight, don't let polling flip the box back.
+  let buzzerPending = false;
+  $('buzzer').onchange = e => {
+    buzzerPending = true;
+    send('buzzer', { on: e.target.checked }, () => { buzzerPending = false; render(); });
+  };
+
   // ---- actions
   function startPreset(p) {
     if (state && state.status !== 'idle' &&
@@ -153,16 +171,17 @@
     send('start', { presetId: p.id, delayMin: delayMin });
   }
 
-  function send(cmd, arg) {
+  function send(cmd, arg, done) {
+    done = done || function () {};
     const pin = pinEl.value.trim();
     if (PIN_REQUIRED) {
-      if (!pin) { toast('Enter the club PIN first', true); pinEl.focus(); return; }
+      if (!pin) { toast('Enter the club PIN first', true); pinEl.focus(); done(); return; }
       try { localStorage.setItem('accPin', pin); } catch (e) {}
     }
     document.body.classList.add('busy');
     google.script.run
-      .withSuccessHandler(s => { document.body.classList.remove('busy'); setState(s); toast('Done'); })
-      .withFailureHandler(err => { document.body.classList.remove('busy'); toast(err.message || String(err), true); })
+      .withSuccessHandler(s => { document.body.classList.remove('busy'); setState(s); toast('Done'); done(); })
+      .withFailureHandler(err => { document.body.classList.remove('busy'); toast(err.message || String(err), true); done(); })
       .command(pin, cmd, arg || {});
   }
 
@@ -217,6 +236,7 @@
     $('pauseBtn').textContent = s.status === 'paused' ? 'Resume' : 'Pause';
     $('stopBtn').disabled = !live;
     document.querySelectorAll('[data-adj]').forEach(b => { b.disabled = !live; });
+    if (!buzzerPending) $('buzzer').checked = s.buzzer !== false;
   }
 
   let toastTimer;

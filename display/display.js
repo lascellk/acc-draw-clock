@@ -118,6 +118,7 @@
     setText(els.clock, clock);
     fitClock(clock);
     setText(els.status, statusText());
+    updateSoundGate();
 
     if (state) handleSounds(v, now);
   }
@@ -150,8 +151,11 @@
     if (!lastOkAt) return 'Connecting…';
     const age = Date.now() - lastOkAt;
     if (age > cfg.staleAfterMs) return '⚠ Offline — last update ' + Math.round(age / 60000) + ' min ago';
-    return '';
+    return buzzerOn() ? '' : 'Buzzer off';
   }
+
+  // Buzzer is on unless the control page has switched it off.
+  const buzzerOn = () => !state || state.buzzer !== false;
 
   // ---------------------------------------------------------------- sounds
 
@@ -161,13 +165,14 @@
   function handleSounds(v, now) {
     const runId = state.status === 'idle' ? null : state.runId;
     const phase = v.phase;
+    const buzz = name => { if (buzzerOn()) play(name); };
     if (lastRunId !== undefined) {
       if (runId !== lastRunId) {
-        if (runId && live(phase) && now - state.startsAt < 15000) play('start');
+        if (runId && live(phase) && now - state.startsAt < 15000) buzz('start');
       } else if (phase !== lastPhase) {
-        if (lastPhase === 'pre' && live(phase)) play('start');
-        else if (lastPhase === 'run' && phase === 'warn') play('warning');
-        else if (live(lastPhase) && phase === 'over') play('end');
+        if (lastPhase === 'pre' && live(phase)) buzz('start');
+        else if (lastPhase === 'run' && phase === 'warn') buzz('warning');
+        else if (live(lastPhase) && phase === 'over') buzz('end');
       }
     }
     lastRunId = runId;
@@ -221,7 +226,7 @@
   // Browsers without the autoplay flag need one click before sound works.
   function updateSoundGate() {
     const c = audioCtx();
-    els.gate.hidden = !c || c.state === 'running';
+    els.gate.hidden = !c || c.state === 'running' || !buzzerOn();
   }
   function unlockAudio() {
     const c = audioCtx();
@@ -257,5 +262,4 @@
 
   render();
   setInterval(render, 200);
-  setTimeout(updateSoundGate, 500);
 })();
