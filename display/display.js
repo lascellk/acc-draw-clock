@@ -69,7 +69,7 @@
     const ms = s.endsAt - now;
     // Back to the logo once the draw has been over for clearAfterMin (the server clears it
     // too; doing it here as well keeps it on time between polls or while offline).
-    const clearMin = s.clearAfterMin != null ? s.clearAfterMin : 30;
+    const clearMin = s.clearAfterMin != null ? s.clearAfterMin : 25;
     if (clearMin > 0 && -ms >= clearMin * 60000) return { phase: 'idle' };
     if (ms <= 0) return { phase: 'over', ms: 0, overMs: -ms, colour: 'over' };
     if (ms <= warnMs) return { phase: 'warn', ms, colour: 'warn' };

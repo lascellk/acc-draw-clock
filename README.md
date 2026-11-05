@@ -42,7 +42,7 @@ Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's
    |---|---|
    | `CLUB_PIN` | PIN needed to use the controls. Leave unset for open controls. |
    | `WARNING_MIN` | Minutes before the end when the warning starts (default 15) |
-   | `CLEAR_AFTER_MIN` | Minutes after time-up before the draw clears itself and the display goes back to the logo (default 30; `0` = stay until someone presses Stop) |
+   | `CLEAR_AFTER_MIN` | Minutes after time-up before the draw clears itself and the display goes back to the logo (default 25; `0` = stay until someone presses Stop) |
    | `LOG_SHEET_ID` | Spreadsheet ID to log every button press to |
 6. **Deploy → New deployment → Web app**, with *Execute as: Me* and *Who has access: Anyone*. Authorize it, then copy the URL that ends in `/exec`.
    - Every later code change needs **Deploy → Manage deployments → Edit → Version: New version**. That keeps the same URL.
@@ -149,7 +149,7 @@ Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
   - Dark navy while running, with cream digits.
   - Lighter navy before a delayed start.
   - **Bright yellow with black digits** at the warning: the last 15 min, or whatever `WARNING_MIN` is set to.
-  - **Club red with blinking white `00:00`** at time up, plus how long it's been over. After 30 minutes over (`CLEAR_AFTER_MIN`) it clears itself and goes back to the logo. Stop or starting the next draw clears it sooner.
+  - **Club red with blinking white `00:00`** at time up, plus how long it's been over. After 25 minutes over (`CLEAR_AFTER_MIN`), so 2 hours after an 8-end draw starts, it clears itself and goes back to the logo. Stop or starting the next draw clears it sooner.
   - When nothing is running, it shows the club logo and the time of day.
 - The **Buzzer** checkbox on the control page mutes or unmutes the TV's sounds. It's on by default and stays as set across draws.
 - Sounds only play on changes the display sees as they happen, so rebooting the TV mid-draw won't sound the start horn again.

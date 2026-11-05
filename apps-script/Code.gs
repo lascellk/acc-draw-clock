@@ -8,7 +8,7 @@
  *   CLUB_PIN      PIN required to use the controls. Unset = controls open.
  *   WARNING_MIN   Minutes before end to switch to yellow + warning sound (default 15).
  *   CLEAR_AFTER_MIN  Minutes after time-up before the draw clears itself and the display
- *                 goes back to the logo (default 30; 0 = stay on "Time's up" until Stop).
+ *                 goes back to the logo (default 25; 0 = stay on "Time's up" until Stop).
  *   LOG_SHEET_ID  Spreadsheet ID; every command is appended to its first sheet.
  */
 
@@ -23,7 +23,7 @@ const PRESETS = [
 ];
 
 const DEFAULT_WARNING_MIN = 15;
-const DEFAULT_CLEAR_AFTER_MIN = 30;
+const DEFAULT_CLEAR_AFTER_MIN = 25; // 95-min draw + 25 = back to the logo 2 h after the start
 const MAX_DELAY_MIN = 120;
 const STATE_KEY = 'STATE';
 const BUZZER_KEY = 'BUZZER'; // 'off' mutes the display; anything else (incl. unset) = on
