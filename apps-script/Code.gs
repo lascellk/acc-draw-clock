@@ -7,6 +7,8 @@
  * Script properties (Project Settings -> Script properties), all optional:
  *   CLUB_PIN      PIN required to use the controls. Unset = controls open.
  *   WARNING_MIN   Minutes before end to switch to yellow + warning sound (default 15).
+ *   CLEAR_AFTER_MIN  Minutes after time-up before the draw clears itself and the display
+ *                 goes back to the logo (default 30; 0 = stay on "Time's up" until Stop).
  *   LOG_SHEET_ID  Spreadsheet ID; every command is appended to its first sheet.
  */
 
@@ -21,6 +23,7 @@ const PRESETS = [
 ];
 
 const DEFAULT_WARNING_MIN = 15;
+const DEFAULT_CLEAR_AFTER_MIN = 30;
 const MAX_DELAY_MIN = 120;
 const STATE_KEY = 'STATE';
 const BUZZER_KEY = 'BUZZER'; // 'off' mutes the display; anything else (incl. unset) = on
@@ -150,7 +153,13 @@ function idleState_() {
 
 function loadState_() {
   const raw = PropertiesService.getScriptProperties().getProperty(STATE_KEY);
-  return raw ? JSON.parse(raw) : idleState_();
+  const s = raw ? JSON.parse(raw) : idleState_();
+  // A draw left on "Time's up" clears itself after CLEAR_AFTER_MIN; the next command saves the idle state.
+  const clearMin = clearAfterMin_();
+  if (s.status === 'running' && clearMin > 0 && Date.now() - s.endsAt >= clearMin * 60000) {
+    return idleState_();
+  }
+  return s;
 }
 
 function saveState_(s) {
@@ -161,6 +170,7 @@ function saveState_(s) {
 function publicState_() {
   const s = loadState_();
   s.buzzer = getProp_(BUZZER_KEY) !== 'off';
+  s.clearAfterMin = clearAfterMin_();
   s.serverNow = Date.now();
   return s;
 }
@@ -174,6 +184,12 @@ function getProp_(key) {
 function warningDefault_() {
   const v = Number(getProp_('WARNING_MIN'));
   return v > 0 ? v : DEFAULT_WARNING_MIN;
+}
+
+function clearAfterMin_() {
+  const raw = getProp_('CLEAR_AFTER_MIN');
+  const v = Number(raw);
+  return raw !== null && raw !== '' && v >= 0 ? v : DEFAULT_CLEAR_AFTER_MIN;
 }
 
 function checkPin_(pin) {

@@ -325,7 +325,10 @@
   function render() {
     if (!state) return;
     const now = Date.now() + offsetMs;
-    const s = state;
+    const clearMin = state.clearAfterMin != null ? state.clearAfterMin : 30;
+    const cleared = state.status === 'running' && clearMin > 0 && now - state.endsAt >= clearMin * 60000;
+    // A draw that has cleared itself shows as idle until the next poll brings the server's idle state.
+    const s = cleared ? Object.assign({}, state, { status: 'idle', label: '' }) : state;
     let cls = '', clock = '--:--', sub = '';
 
     if (s.status === 'idle') {

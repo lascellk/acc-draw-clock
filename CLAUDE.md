@@ -39,6 +39,7 @@ pi/            Pi kiosk: deploy.sh (Git Bash on the PC) copies display/ to the P
     "remainingMsWhenPaused": null,
     "warningMin": 15,
     "buzzer": true,
+    "clearAfterMin": 30,
     "serverNow": 1730816700000
   }
   ```
@@ -90,6 +91,7 @@ Phone-friendly, big buttons:
 - Display device: Raspberry Pi 4 (Raspberry Pi OS 64-bit with desktop); Android box is the spare
 - Theme: club logo colours (navy/red/gold/cream); warning stays bright yellow for visibility
 - Buzzer on/off toggle on the control page, default on
+- Time's-up screen clears itself 30 min after zero (`CLEAR_AFTER_MIN` script property, 0 = never); server, display and control page all apply it
 
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
