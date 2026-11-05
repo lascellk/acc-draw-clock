@@ -18,7 +18,7 @@
   const demo = params.has('demo');
 
   const $ = id => document.getElementById(id);
-  const els = { label: $('label'), clock: $('clock'), sub: $('sub'), status: $('status'), gate: $('sound-gate') };
+  const els = { logo: $('logo'), label: $('label'), clock: $('clock'), sub: $('sub'), status: $('status'), gate: $('sound-gate') };
 
   let state = null;        // last state received
   let offsetMs = 0;        // server clock - local clock
@@ -90,7 +90,8 @@
 
     switch (v.phase) {
       case 'idle':
-        label = 'Almonte Curling Club';
+        // The logo carries the club name; fall back to text if it failed to load.
+        label = logoOk() ? '' : 'Almonte Curling Club';
         clock = timeOfDay(now).replace(/\s?[AP]M$/i, '');
         break;
       case 'pre':
@@ -110,11 +111,12 @@
         sub = 'Ends ' + timeOfDay(state.endsAt);
     }
 
-    document.body.className = v.phase === 'idle' ? 'idle'
+    document.body.className = v.phase === 'idle' ? 'idle' + (logoOk() ? ' has-logo' : '')
       : v.colour + (v.phase === 'paused' ? ' paused' : '');
     setText(els.label, label);
     setText(els.sub, sub);
-    if (setText(els.clock, clock)) fitClock(clock);
+    setText(els.clock, clock);
+    fitClock(clock);
     setText(els.status, statusText());
 
     if (state) handleSounds(v, now);
@@ -126,14 +128,18 @@
     return true;
   }
 
-  // Scale the digits to fill the screen; only re-measured when the text length or window size changes.
+  const logoOk = () => els.logo.complete && els.logo.naturalWidth > 0;
+
+  // Scale the digits to fill the screen; only re-measured when the text length, window size or layout changes.
+  // With the logo showing, the time of day gets the smaller space below it.
   let fitKey = '';
   function fitClock(text) {
-    const key = text.length + 'x' + innerWidth + 'x' + innerHeight;
+    const maxH = document.body.classList.contains('has-logo') ? 0.25 : 0.62;
+    const key = text.length + 'x' + innerWidth + 'x' + innerHeight + 'x' + maxH;
     if (key === fitKey) return;
     fitKey = key;
     els.clock.style.fontSize = '100px';
-    const scale = Math.min((innerWidth * 0.94) / els.clock.offsetWidth, (innerHeight * 0.62) / els.clock.offsetHeight);
+    const scale = Math.min((innerWidth * 0.94) / els.clock.offsetWidth, (innerHeight * maxH) / els.clock.offsetHeight);
     els.clock.style.fontSize = Math.floor(100 * scale) + 'px';
   }
   addEventListener('resize', () => { fitKey = ''; fitClock(els.clock.textContent); });

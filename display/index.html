@@ -17,6 +17,9 @@
     body.warn { --bg: #f5c400; --fg: #111; --muted: rgba(0, 0, 0, .65); }
     body.over { --bg: #c8102e; }
 
+    #logo  { display: none; height: 50vh; margin-bottom: 4vh; }
+    body.idle.has-logo #logo { display: block; }
+    body.has-logo #label, body.has-logo #sub { display: none; }
     #label { font-size: 7vh; font-weight: 600; min-height: 9vh; text-align: center; }
     #clock { font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap; }
     #sub   { font-size: 6vh; min-height: 8vh; color: var(--muted); text-align: center; }
@@ -34,6 +37,7 @@
   </style>
 </head>
 <body class="idle">
+  <img id="logo" src="assets/logo.png" alt="Almonte Curling Club">
   <div id="label"></div>
   <div id="clock">--:--</div>
   <div id="sub"></div>
