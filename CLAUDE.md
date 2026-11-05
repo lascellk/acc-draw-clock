@@ -30,9 +30,11 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
   }
   ```
 - Return `serverNow` so the display can correct for device clock drift.
-- Access: display/state endpoint read-only and open; controls restricted by Workspace sign-in OR a club PIN (**not decided yet**).
+- Access: display/state endpoint read-only and open; controls require the club PIN (`CLUB_PIN` script property), checked server-side on every command.
 
 ### 2. Control page
+Hosted on **GitHub Pages** (`control/` → https://lascellk.github.io/acc-draw-clock/), not Apps Script: Apps Script pages fail with "Sorry, unable to open the file" on phones signed in to several Google accounts. It calls the `/exec` JSON API (`doPost`, `?mode=config|state`) with plain fetch. It opens on a PIN screen; the controls show only after the server accepts the PIN. `noindex` keeps it out of search results. The repo is public (required for free Pages), so no secrets go in it.
+
 Phone-friendly, big buttons:
 - Presets: 8-End Draw (95 min), 6-End Draw (65 min), 2-hr, Mixed Doubles (configurable list)
   - End-based timing: when the clock runs out, teams finish the current end and play one more, so countdown ≈ (ends − 1.5) × ~14.6 min/end
@@ -55,8 +57,14 @@ Phone-friendly, big buttons:
 - Eye on the Clock (github.com/T-Hugs/eyeontheclock) — beta; local server not yet released.
 - Commercial LED gym timers / shot clocks — small digits or expensive.
 
+## Decided
+- Control access: club PIN (members mostly don't have club Workspace accounts)
+- Warning default: 15 min (`WARNING_MIN` script property or per preset)
+- Display device: Raspberry Pi 4 (Raspberry Pi OS 64-bit with desktop); Android box is the spare
+- Theme: club logo colours (navy/red/gold/cream); warning stays bright yellow for visibility
+- Buzzer on/off toggle on the control page, default on
+
 ## Open decisions
-- Control access: Workspace sign-in vs club PIN
-- Warning time default (e.g. 15 min before end)
-- Pi vs Android TV box (design supports both)
-- Sound files / horn
+- Lockout after repeated wrong PINs (not built yet)
+- Sound files / horn relay
+- Pi setup script (waiting on the Pi being built)
