@@ -30,12 +30,28 @@ function doGet(e) {
   if (params.mode === 'state') {
     return jsonOut_(publicState_(), params.callback);
   }
+  if (params.mode === 'config') {
+    return jsonOut_({ presets: PRESETS, pinRequired: Boolean(getProp_('CLUB_PIN')) }, params.callback);
+  }
   const t = HtmlService.createTemplateFromFile('Control');
   t.presetsJson = JSON.stringify(PRESETS);
   t.pinRequired = Boolean(getProp_('CLUB_PIN'));
   return t.evaluate()
     .setTitle('ACC Draw Clock')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1');
+}
+
+// JSON API for the standalone control page (control/index.html). It posts {pin, cmd, arg}
+// as text/plain so browsers skip the CORS preflight, which Apps Script can't answer.
+// Calling this way never sends Google cookies, so phones signed in to several
+// Google accounts don't hit "Sorry, unable to open the file at this time".
+function doPost(e) {
+  try {
+    const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    return jsonOut_({ ok: true, state: command(req.pin, req.cmd, req.arg) });
+  } catch (err) {
+    return jsonOut_({ ok: false, error: err.message || String(err) });
+  }
 }
 
 // ---- Called from the control page via google.script.run ----
