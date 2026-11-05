@@ -14,6 +14,19 @@ Open `display/index.html?demo=1&warn=0.5` in Chrome. That runs a 1-minute demo w
 
 ## 2. Deploy the Apps Script web app
 
+### With clasp (how it's set up now)
+The project lives in the club shared drive (Countdown Timer folder), owned by clubmgr@almontecurling.ca. It's linked to this repo through `.clasp.json`.
+- Script editor: <https://script.google.com/d/1ANzTEOKjTfNg-e0ZKoscBr1KnpcQCElu_LGk6PRJEQEwaunDlsk4GguP/edit>
+- Web app URL: <https://script.google.com/macros/s/AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T/exec>
+
+To ship a code change while keeping the same URL:
+```
+clasp push
+clasp update-deployment AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T --description "what changed"
+```
+Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's copy.
+
+### By hand (copy and paste)
 1. Signed in to the club Google account, go to <https://script.google.com> → **New project**. Name it "ACC Draw Clock".
 2. Replace `Code.gs` with [apps-script/Code.gs](apps-script/Code.gs).
 3. **+ → HTML**, name it `Control` and paste in [apps-script/Control.html](apps-script/Control.html).
