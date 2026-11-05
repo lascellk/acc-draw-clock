@@ -4,23 +4,32 @@
   <base target="_top">
   <meta charset="utf-8">
   <style>
+    /* Club colours, taken from the logo */
     :root {
-      --bg: #f2f4f7; --card: #fff; --fg: #111; --muted: #667;
-      --accent: #0b5fff; --danger: #c8102e; --warn: #f5c400;
+      --navy: #1e3364; --navy-deep: #0f1e3d; --red: #b3222f; --gold: #c4a35f;
+      --cream: #ede6d3; --charcoal: #2f2d2b;
+      --bg: #f6f2e8; --card: #fff; --fg: var(--charcoal); --muted: #6b6559;
+      --accent: var(--navy); --danger: var(--red); --warn: #f5c400;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; padding: 12px 16px 40px; background: var(--bg); color: var(--fg);
+      margin: 0; padding: 0 16px 40px; background: var(--bg); color: var(--fg);
       font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    h1 { font-size: 20px; margin: 4px 0 12px; }
-    h2 { font-size: 15px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-    .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    header {
+      display: flex; align-items: center; gap: 12px; margin: 0 -16px 14px; padding: 10px 16px;
+      background: var(--navy); color: var(--cream); border-bottom: 4px solid var(--gold);
+    }
+    header .logo { width: 56px; height: 56px; flex: none; }
+    header h1 { font-size: 21px; margin: 0; line-height: 1.15; }
+    header h1 small { display: block; font-size: 13px; font-weight: 500; color: var(--gold); letter-spacing: .06em; text-transform: uppercase; }
+    h2 { font-size: 14px; margin: 0 0 10px; color: var(--navy); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+    .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(30,51,100,.12); }
 
-    #now { text-align: center; transition: background-color .4s; }
-    #now.pre { background: #dbe8ff; }
-    #now.warn { background: var(--warn); }
+    #now { text-align: center; background: var(--navy-deep); color: var(--cream); transition: background-color .4s, color .4s; }
+    #now.pre { background: var(--navy); }
+    #now.warn { background: var(--warn); color: #111; }
     #now.over { background: var(--danger); color: #fff; }
     #nowLabel { font-size: 18px; font-weight: 600; min-height: 22px; }
     #nowClock { font-size: 64px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -29,25 +38,26 @@
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     button {
       font: inherit; font-size: 18px; font-weight: 600; padding: 18px 10px; border-radius: 12px;
-      border: 0; background: #e6e9ef; color: var(--fg); cursor: pointer;
+      border: 0; background: var(--cream); color: var(--navy); cursor: pointer;
     }
     button:active { transform: scale(.98); }
     button:disabled { opacity: .4; }
-    button.preset { background: var(--accent); color: #fff; }
-    button.preset small { display: block; font-weight: 400; font-size: 14px; opacity: .85; }
+    button.preset { background: var(--accent); color: #fff; border-bottom: 3px solid var(--gold); }
+    button.preset small { display: block; font-weight: 400; font-size: 14px; color: var(--cream); opacity: .85; }
     button.danger { background: var(--danger); color: #fff; }
     .full { grid-column: 1 / -1; }
 
     .seg { display: flex; gap: 6px; margin-bottom: 12px; }
     .seg button { flex: 1; padding: 10px 4px; font-size: 15px; }
-    .seg button.on { background: var(--fg); color: #fff; }
+    .seg button.on { background: var(--gold); color: var(--navy-deep); }
 
     #pinRow label { display: flex; align-items: center; gap: 10px; font-weight: 600; }
-    #pin { flex: 1; font-size: 20px; padding: 10px; border: 1px solid #ccd; border-radius: 10px; }
+    #pinRow label { color: var(--navy); }
+    #pin { flex: 1; font-size: 20px; padding: 10px; border: 1px solid var(--gold); border-radius: 10px; }
 
     #toast {
       position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px; border-radius: 10px;
-      background: #222; color: #fff; text-align: center; opacity: 0; transition: opacity .3s; pointer-events: none;
+      background: var(--navy-deep); color: var(--cream); text-align: center; opacity: 0; transition: opacity .3s; pointer-events: none;
     }
     #toast.show { opacity: 1; }
     #toast.err { background: var(--danger); }
@@ -55,7 +65,10 @@
   </style>
 </head>
 <body>
-  <h1>ACC Draw Clock</h1>
+  <header>
+    <?!= HtmlService.createHtmlOutputFromFile('Logo').getContent() ?>
+    <h1><small>Almonte Curling Club</small>Draw Clock</h1>
+  </header>
 
   <section id="now" class="card">
     <div id="nowLabel"></div>

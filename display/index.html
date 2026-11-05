@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ACC Draw Clock</title>
   <style>
-    :root { --bg: #0b1a2e; --fg: #fff; --muted: rgba(255, 255, 255, .6); }
+    /* Club colours from the logo. Warning stays bright yellow so it reads across the rink. */
+    :root { --bg: #0f1e3d; --fg: #ede6d3; --muted: rgba(237, 230, 211, .6); --gold: #c4a35f; }
     html, body { margin: 0; height: 100%; overflow: hidden; }
     body {
       background: var(--bg); color: var(--fg); cursor: none;
@@ -13,9 +14,10 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       transition: background-color .6s, color .6s;
     }
-    body.pre  { --bg: #12355b; }
+    body.pre  { --bg: #1e3364; }
     body.warn { --bg: #f5c400; --fg: #111; --muted: rgba(0, 0, 0, .65); }
-    body.over { --bg: #c8102e; }
+    body.over { --bg: #b3222f; --fg: #fff; --muted: rgba(255, 255, 255, .75); }
+    body.run #label, body.pre #label { color: var(--gold); }
 
     #logo  { display: none; height: 50vh; margin-bottom: 4vh; }
     body.idle.has-logo #logo { display: block; }

@@ -29,7 +29,7 @@ Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's
 ### By hand (copy and paste)
 1. Signed in to the club Google account, go to <https://script.google.com> → **New project**. Name it "ACC Draw Clock".
 2. Replace `Code.gs` with [apps-script/Code.gs](apps-script/Code.gs).
-3. **+ → HTML**, name it `Control` and paste in [apps-script/Control.html](apps-script/Control.html).
+3. **+ → HTML**, name it `Control` and paste in [apps-script/Control.html](apps-script/Control.html). Do the same for `Logo` with [apps-script/Logo.html](apps-script/Logo.html), which holds the club logo as an embedded image.
 4. **Project Settings** → tick "Show appsscript.json". Replace it with [apps-script/appsscript.json](apps-script/appsscript.json).
 5. Optional: **Project Settings → Script properties**
    | Property | Meaning |
