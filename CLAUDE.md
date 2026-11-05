@@ -34,7 +34,8 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
 
 ### 2. Control page
 Phone-friendly, big buttons:
-- Presets: 95-min Draw, 2-hr, Mixed Doubles (configurable list)
+- Presets: 8-End Draw (95 min), 6-End Draw (65 min), 2-hr, Mixed Doubles (configurable list)
+  - End-based timing: when the clock runs out, teams finish the current end and play one more, so countdown ≈ (ends − 1.5) × ~14.6 min/end
 - Start now / Start in N minutes (delayed start)
 - Pause / Resume, +1 min / -1 min, Stop
 

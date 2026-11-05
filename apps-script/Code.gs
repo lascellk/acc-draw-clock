@@ -11,8 +11,11 @@
  */
 
 // Edit this list to change the preset buttons. warningMin is optional per preset.
+// End-based draws: when time runs out, teams finish the current end and play one more,
+// so minutes ≈ (ends − 1.5) × ~14.6 min per end.
 const PRESETS = [
-  { id: 'draw95', label: '95-min Draw', minutes: 95 },
+  { id: 'ends8', label: '8-End Draw', minutes: 95 },
+  { id: 'ends6', label: '6-End Draw', minutes: 65 },
   { id: 'draw120', label: '2-hr Draw', minutes: 120 },
   { id: 'md', label: 'Mixed Doubles', minutes: 90 },
 ];
