@@ -71,6 +71,7 @@ Phone-friendly, big buttons:
   - Always run clasp as `clasp --user clubmgr ...`. The default clasp login on this machine is rentals@almontecurling.ca, which is for the Rental Manager.
   - Don't `clasp pull`/`clasp clone`: they overwrite `appsscript.json`.
 - Git: commit and push to `main` after each finished change, without asking. Never force-push.
+- Backend: if `apps-script/` changed, also `clasp --user clubmgr push --force` then `clasp --user clubmgr update-deployment <deployment ID> --description "<note>"`, without asking.
 - Control page: any push to `main` that touches `control/` republishes https://lascellk.github.io/acc-draw-clock/.
 
 ## Background / alternatives considered
