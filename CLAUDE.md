@@ -65,6 +65,7 @@ Phone-friendly, big buttons:
 ### Devices
 - Raspberry Pi 4 (main): built and online. `acc-admin@acc-clock.local`, Raspberry Pi OS 64-bit (Debian 13 Trixie), labwc desktop with autologin, browser is `chromium`. This PC logs in by SSH key; `sudo` needs a password, so keep Pi setup to user-level changes.
   - Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, started from `~/.config/labwc/autostart` via `lwrespawn`; screen blanking off (no `swayidle` line).
+  - Network: Ethernet only. Wi-Fi radio turned off 2026-11-05 at the user's request (`sudo nmcli radio wifi on|off`; needs the user's password). Hidden pointer confirmed after reboot.
   - Sound: TV over HDMI for now (`sh pi/deploy.sh`); `jack` option for the 3.5 mm output later.
   - Commands run over SSH that touch the desktop need the labwc session env (`XDG_*`, `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY=wayland-0`); `grim` takes screenshots to check the screen.
 - Android TV box (spare): Fully Kiosk Browser (launch on boot, keep screen on, allow autoplay).
