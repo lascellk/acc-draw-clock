@@ -94,4 +94,4 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Pi: confirm the kiosk comes up after a real reboot/power cut; then turn on the overlay file system (needs `sudo raspi-config`, done by the user, last)
+- Pi: kiosk comes up after reboot (confirmed 2026-11-05); hidden pointer needs confirming after a reboot. Last step: overlay file system (needs `sudo raspi-config`, done by the user)
