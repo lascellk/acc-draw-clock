@@ -4,6 +4,7 @@
 apps-script/   Google Apps Script web app (JSON API + state; also a fallback control page)
 control/       Member control page, published to GitHub Pages
 display/       Local display page for the TV (Pi / Android TV box)
+pi/            Pi kiosk setup: deploy.sh (run on a PC) copies display/ and runs setup.sh on the Pi
 ```
 
 **Members use: <https://lascellk.github.io/acc-draw-clock/>** (put this in the QR code)
@@ -82,19 +83,25 @@ Use the standard **Raspberry Pi OS (64-bit) with desktop**: not Lite (it has no 
 5. Check you can reach it from a PC on the same network: `ssh <user>@acc-clock.local`
 
 #### 2. Set up the kiosk
-A setup script for this is planned. Until it exists, do it by hand:
-1. Copy `display/` to `~/acc-clock/` on the Pi, for example with `scp -r display <user>@acc-clock.local:~/acc-clock`.
-2. Run `sudo raspi-config`:
-   - Display Options → Screen Blanking → **Off**
-   - System Options → Audio → **Headphones**
-3. Add the line below to `~/.config/labwc/autostart`. Newer releases (based on Debian "Trixie") name the browser `chromium`; older Bookworm releases call it `chromium-browser`. Run `which chromium chromium-browser` to see which one you have.
+The club Pi is `acc-admin@acc-clock.local`. It's set up from a PC with the scripts in `pi/`.
+
+1. **One time: SSH key login.** In Git Bash, run `ssh-keygen -t ed25519` if you don't have a key yet. Then in PowerShell run this and type the Pi password once:
    ```
-   chromium --kiosk --noerrdialogs --disable-infobars --incognito \
-     --autoplay-policy=no-user-gesture-required \
-     --allow-file-access-from-files \
-     file:///home/<user>/acc-clock/index.html
+   type $env:USERPROFILE\.ssh\id_ed25519.pub | ssh acc-admin@acc-clock.local "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
    ```
-4. Reboot. The clock should come up fullscreen. Use `?demo=1&warn=0.5` to check the colours and sounds.
+2. **Set up or update.** From the repo folder in Git Bash:
+   ```
+   sh pi/deploy.sh          # sound through the TV (HDMI)
+   sh pi/deploy.sh jack     # sound through the 3.5 mm jack instead
+   ```
+   It copies `display/` to `~/acc-clock` on the Pi and runs [pi/setup.sh](pi/setup.sh) there, then starts or restarts the kiosk. Run it again any time `display/` changes. Use `PI=user@host sh pi/deploy.sh` for a different Pi.
+
+What `setup.sh` does (no `sudo` needed):
+- Adds Chromium in kiosk mode to `~/.config/labwc/autostart`, so it starts on login. The Pi logs in automatically. Pi OS's `lwrespawn` reopens Chromium within a second if it's closed or crashes.
+- Keeps screen blanking off. On this desktop, blanking is a `swayidle` line in that same file, and the script removes it.
+- Sets the default sound output (HDMI or jack) at 100%; set the volume on the TV or speaker. The choice survives reboots and the TV being switched off and on.
+
+To get to the desktop for maintenance, stop the kiosk over SSH: `pkill -f "[l]wrespawn /usr/bin/chromium"; pkill -x chromium`. A reboot or another deploy brings it back.
 
 #### 3. Network: build at home, run at the club
 The Pi is set up on a home network, then moved to the rink. Options, best first:

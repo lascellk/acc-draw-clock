@@ -12,6 +12,7 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
 apps-script/   Apps Script backend: Code.gs (state + JSON API), Control.html (fallback control page), Logo.html
 control/       Member control page, published to GitHub Pages by .github/workflows/pages.yml on push to main
 display/       Local display page for the TV (index.html, display.js, config.js holds stateUrl)
+pi/            Pi kiosk: deploy.sh (Git Bash on the PC) copies display/ to the Pi and runs setup.sh there
 .clasp.json    Links apps-script/ to the Apps Script project
 ```
 
@@ -61,7 +62,10 @@ Phone-friendly, big buttons:
 - Plays start / warning / end sounds (mp3) through a powered speaker. Future: relay-triggered horn.
 
 ### Devices
-- Raspberry Pi 4 (main): Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, screen blanking off, launch on boot.
+- Raspberry Pi 4 (main): built and online. `acc-admin@acc-clock.local`, Raspberry Pi OS 64-bit (Debian 13 Trixie), labwc desktop with autologin, browser is `chromium`. This PC logs in by SSH key; `sudo` needs a password, so keep Pi setup to user-level changes.
+  - Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, started from `~/.config/labwc/autostart` via `lwrespawn`; screen blanking off (no `swayidle` line).
+  - Sound: TV over HDMI for now (`sh pi/deploy.sh`); `jack` option for the 3.5 mm output later.
+  - Commands run over SSH that touch the desktop need the labwc session env (`XDG_*`, `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY=wayland-0`); `grim` takes screenshots to check the screen.
 - Android TV box (spare): Fully Kiosk Browser (launch on boot, keep screen on, allow autoplay).
 
 ## Deployment
@@ -73,6 +77,7 @@ Phone-friendly, big buttons:
 - Git: commit and push to `main` after each finished change, without asking. Never force-push.
 - Backend: if `apps-script/` changed, also `clasp --user clubmgr push --force` then `clasp --user clubmgr update-deployment <deployment ID> --description "<note>"`, without asking.
 - Control page: any push to `main` that touches `control/` republishes https://lascellk.github.io/acc-draw-clock/.
+- Display: if `display/` or `pi/` changed, also run `sh pi/deploy.sh` (Git Bash) to update the Pi, without asking.
 
 ## Background / alternatives considered
 - Howard Griffin gametimer (howardgriffin.org/gametimer) — single local HTML page; control only on the Pi itself (keyboard/mouse/VNC).
@@ -89,4 +94,4 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Pi setup script (waiting on the Pi being built)
+- Pi: confirm the kiosk comes up after a real reboot/power cut; then turn on the overlay file system (needs `sudo raspi-config`, done by the user, last)
