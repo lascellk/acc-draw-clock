@@ -48,6 +48,11 @@ function doGet(e) {
 function doPost(e) {
   try {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (req.cmd === 'verify') {
+      // PIN screen: check the PIN without changing anything.
+      checkPin_(req.pin);
+      return jsonOut_({ ok: true, state: publicState_() });
+    }
     return jsonOut_({ ok: true, state: command(req.pin, req.cmd, req.arg) });
   } catch (err) {
     return jsonOut_({ ok: false, error: err.message || String(err) });

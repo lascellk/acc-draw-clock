@@ -60,8 +60,15 @@
     .seg button { flex: 1; padding: 10px 4px; font-size: 15px; }
     .seg button.on { background: var(--gold); color: var(--navy-deep); }
 
-    #pinRow label { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--navy); }
-    #pin { flex: 1; font-size: 20px; padding: 10px; border: 1px solid var(--gold); border-radius: 10px; }
+    #gate { text-align: center; padding: 24px 18px; margin-top: 24px; }
+    #gate h2 { font-size: 18px; }
+    #gate p { margin: 0 0 14px; color: var(--muted); }
+    #gatePin {
+      width: 100%; font-size: 28px; text-align: center; letter-spacing: .3em; padding: 12px;
+      border: 2px solid var(--gold); border-radius: 12px; margin-bottom: 12px; color: var(--navy);
+    }
+    #gate button { width: 100%; }
+    #lockBtn { background: none; color: var(--muted); font-size: 14px; font-weight: 500; padding: 8px; width: 100%; }
 
     .toggle { display: flex; align-items: center; gap: 14px; font-size: 18px; font-weight: 600; color: var(--navy); cursor: pointer; }
     .toggle input { width: 28px; height: 28px; margin: 0; flex: none; accent-color: var(--navy); }
@@ -86,14 +93,20 @@
   </header>
 
   <main>
+    <section id="gate" class="card" hidden>
+      <h2>Club PIN</h2>
+      <p>Enter the club PIN to use the draw clock.</p>
+      <form id="gateForm">
+        <input id="gatePin" type="password" inputmode="numeric" autocomplete="current-password" aria-label="Club PIN">
+        <button type="submit" class="preset">Unlock</button>
+      </form>
+    </section>
+
+    <div id="app" hidden>
     <section id="now" class="card">
       <div id="nowLabel"></div>
       <div id="nowClock">--:--</div>
       <div id="nowSub">Loading…</div>
-    </section>
-
-    <section id="pinRow" class="card" hidden>
-      <label>PIN <input id="pin" type="password" inputmode="numeric" autocomplete="off"></label>
     </section>
 
     <section class="card">
@@ -123,6 +136,9 @@
         <span>Buzzer<small>Start, warning and time-up sounds on the TV</small></span>
       </label>
     </section>
+
+    <button id="lockBtn" hidden>Lock (forget PIN on this phone)</button>
+    </div>
   </main>
 
   <div id="toast"></div>
@@ -132,8 +148,8 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T/exec';
 
   const $ = id => document.getElementById(id);
-  const pinEl = $('pin');
-  let pinRequired = false;
+  let pin = '';          // accepted PIN, sent with every command
+  let started = false;   // polling running
   let state = null;
   let offsetMs = 0;
   let delayMin = 0;
@@ -158,31 +174,81 @@
     return data.state;
   }
 
-  // ---- setup
+  // ---- setup: the controls stay hidden until the PIN is accepted (or no PIN is set)
   async function init() {
     try {
       const cfg = await getJson('config');
-      pinRequired = cfg.pinRequired;
       buildPresets(cfg.presets);
+      if (!cfg.pinRequired) return unlock('');
+      const saved = loadPin();
+      if (saved && await verify(saved)) return unlock(saved);
+      lock();
     } catch (err) {
       toast("Can't reach the clock server — check your connection", true);
       setTimeout(init, 5000);
-      return;
     }
-    if (pinRequired) showPin();
+  }
+
+  // true = accepted, false = wrong PIN; network trouble throws.
+  async function verify(p) {
+    try {
+      setState(await post({ pin: p, cmd: 'verify' }));
+      return true;
+    } catch (err) {
+      if (err.message === 'Wrong PIN') return false;
+      throw err;
+    }
+  }
+
+  function unlock(p) {
+    pin = p;
+    savePin(p);
+    $('gate').hidden = true;
+    $('app').hidden = false;
+    $('lockBtn').hidden = !p;
+    if (started) return;
+    started = true;
     refresh();
     setInterval(refresh, 5000);
     setInterval(render, 250);
   }
 
-  function showPin() {
-    pinRequired = true;
-    if (!$('pinRow').hidden) return;
-    $('pinRow').hidden = false;
-    try { pinEl.value = localStorage.getItem('accPin') || ''; } catch (e) {}
+  function lock(message) {
+    pin = '';
+    savePin('');
+    $('app').hidden = true;
+    $('gate').hidden = false;
+    $('gatePin').value = '';
+    $('gatePin').focus();
+    if (message) toast(message, true);
   }
 
+  function loadPin() {
+    try { return localStorage.getItem('accPin') || ''; } catch (e) { return ''; }
+  }
+  function savePin(p) {
+    try { p ? localStorage.setItem('accPin', p) : localStorage.removeItem('accPin'); } catch (e) {}
+  }
+
+  $('gateForm').onsubmit = async e => {
+    e.preventDefault();
+    const p = $('gatePin').value.trim();
+    if (!p) return;
+    document.body.classList.add('busy');
+    try {
+      if (await verify(p)) unlock(p);
+      else lock('Wrong PIN');
+    } catch (err) {
+      toast("Can't reach the clock server — try again", true);
+    } finally {
+      document.body.classList.remove('busy');
+    }
+  };
+
+  $('lockBtn').onclick = () => lock();
+
   function buildPresets(presets) {
+    $('presets').textContent = '';
     presets.forEach(p => {
       const b = document.createElement('button');
       b.className = 'preset';
@@ -226,19 +292,14 @@
   }
 
   async function send(cmd, arg) {
-    const pin = pinEl.value.trim();
-    if (pinRequired) {
-      if (!pin) { toast('Enter the club PIN first', true); pinEl.focus(); return; }
-      try { localStorage.setItem('accPin', pin); } catch (e) {}
-    }
     document.body.classList.add('busy');
     try {
       setState(await post({ pin: pin, cmd: cmd, arg: arg || {} }));
       toast('Done');
     } catch (err) {
-      // A PIN may have been set since this page loaded.
-      if (err.message === 'Wrong PIN') { showPin(); pinEl.focus(); }
-      toast(err.message, true);
+      // The PIN was set or changed since this phone unlocked.
+      if (err.message === 'Wrong PIN') lock('The club PIN has changed — enter the new one');
+      else toast(err.message, true);
     } finally {
       document.body.classList.remove('busy');
     }
