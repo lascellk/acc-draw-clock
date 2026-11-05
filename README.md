@@ -99,6 +99,7 @@ The club Pi is `acc-admin@acc-clock.local`. It's set up from a PC with the scrip
 What `setup.sh` does (no `sudo` needed):
 - Adds Chromium in kiosk mode to `~/.config/labwc/autostart`, so it starts on login. The Pi logs in automatically. Pi OS's `lwrespawn` reopens Chromium within a second if it's closed or crashes.
 - Keeps screen blanking off. On this desktop, blanking is a `swayidle` line in that same file, and the script removes it.
+- Hides the mouse pointer from boot by giving the desktop an invisible cursor theme (`XCURSOR_THEME=acc-blank` in `~/.config/labwc/environment`). The page's own CSS only hides the pointer after the mouse moves. To get a visible pointer back for maintenance, delete that line and reboot.
 - Sets the default sound output (HDMI or jack) at 100%; set the volume on the TV or speaker. The choice survives reboots and the TV being switched off and on.
 
 To get to the desktop for maintenance, stop the kiosk over SSH: `pkill -f "[l]wrespawn /usr/bin/chromium"; pkill -x chromium`. A reboot or another deploy brings it back.
