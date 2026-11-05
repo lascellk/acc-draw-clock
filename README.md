@@ -1,9 +1,14 @@
 # ACC Draw Clock — setup
 
 ```
-apps-script/   Google Apps Script web app (control page + JSON state)
+apps-script/   Google Apps Script web app (JSON API + state; also a fallback control page)
+control/       Member control page, published to GitHub Pages
 display/       Local display page for the TV (Pi / Android TV box)
 ```
+
+**Members use: <https://lascellk.github.io/acc-draw-clock/>** (put this in the QR code)
+
+The control page is hosted on GitHub Pages, not Apps Script. Apps Script's own pages fail with "Sorry, unable to open the file at this time" on phones signed in to more than one Google account. The GitHub page talks to the Apps Script `/exec` URL with plain requests, so Google sign-in never comes into it. Every push that changes `control/` republishes it automatically (see `.github/workflows/pages.yml`).
 
 ## 1. Try the display (no server needed)
 
@@ -39,7 +44,7 @@ Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's
    | `LOG_SHEET_ID` | Spreadsheet ID to log every button press to |
 6. **Deploy → New deployment → Web app**, with *Execute as: Me* and *Who has access: Anyone*. Authorize it, then copy the URL that ends in `/exec`.
    - Every later code change needs **Deploy → Manage deployments → Edit → Version: New version**. That keeps the same URL.
-7. Open the `/exec` URL on a phone to get the control page. Add it to the home screen, and put a QR code by the door.
+7. The `/exec` URL also serves a control page, but give members the GitHub Pages link above instead. If you redeploy to a **new** URL, update `API_URL` in [control/index.html](control/index.html) and `stateUrl` in [display/config.js](display/config.js).
 
 To change the preset buttons, edit `PRESETS` at the top of `Code.gs` and redeploy.
 
