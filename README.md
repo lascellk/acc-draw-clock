@@ -26,8 +26,8 @@ The project lives in the club shared drive (Countdown Timer folder), owned by cl
 
 To ship a code change while keeping the same URL:
 ```
-clasp push
-clasp update-deployment AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T --description "what changed"
+clasp --user clubmgr push
+clasp --user clubmgr update-deployment AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T --description "what changed"
 ```
 Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's copy.
 

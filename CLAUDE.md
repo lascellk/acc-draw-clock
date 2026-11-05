@@ -7,18 +7,29 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
 - Members start a preset from their phone or a tablet by the door.
 - Sounds at start, at the warning, and at time-up.
 
+## Repo layout
+```
+apps-script/   Apps Script backend: Code.gs (state + JSON API), Control.html (fallback control page), Logo.html
+control/       Member control page, published to GitHub Pages by .github/workflows/pages.yml on push to main
+display/       Local display page for the TV (index.html, display.js, config.js holds stateUrl)
+.clasp.json    Links apps-script/ to the Apps Script project
+```
+
 ## Architecture
 ```
-[Phone / tablet]  --taps-->  [Google Apps Script web app]  <--polls every 5-10 s--  [Display page on Pi / Android TV box]  -->  TV + powered speaker
-   control page                 state + JSON API                   local HTML, counts down itself
+[Phone / tablet]  --POST /exec-->  [Google Apps Script web app]  <--GET ?mode=state every 5-10 s--  [Display page on Pi]  -->  TV + powered speaker
+ control page on GitHub Pages        state + JSON API                                          local HTML, counts down itself
 ```
 
 ### 1. Apps Script web app (hosted in the club's Google Workspace)
-- `doGet` serves:
-  - the control page (HtmlService), and
-  - a JSON state endpoint for the display (e.g. `?mode=state`).
-- Stores state in PropertiesService (optionally logs actions to a Google Sheet).
-- State shape (suggested):
+- `doGet`:
+  - `?mode=state`: JSON state for the display (open, read-only)
+  - `?mode=config`: preset list and whether a PIN is required (used by the control page)
+  - no mode: the fallback Apps Script control page (HtmlService); members use the GitHub Pages page instead
+- `doPost`: commands from the control page, `{pin, cmd, arg}` sent as text/plain to avoid a CORS preflight. `cmd: "verify"` checks the PIN without changing anything.
+- Stores state in PropertiesService (optionally logs actions to a Google Sheet via `LOG_SHEET_ID`).
+- Presets are the `PRESETS` array at the top of `Code.gs`.
+- State shape:
   ```json
   {
     "status": "idle | running | paused",
@@ -26,6 +37,7 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
     "endsAt": 1730822400000,
     "remainingMsWhenPaused": null,
     "warningMin": 15,
+    "buzzer": true,
     "serverNow": 1730816700000
   }
   ```
@@ -49,8 +61,17 @@ Phone-friendly, big buttons:
 - Plays start / warning / end sounds (mp3) through a powered speaker. Future: relay-triggered horn.
 
 ### Devices
-- Raspberry Pi 4/5: Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, screen blanking off, launch on boot.
-- Android TV box: Fully Kiosk Browser (launch on boot, keep screen on, allow autoplay).
+- Raspberry Pi 4 (main): Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, screen blanking off, launch on boot.
+- Android TV box (spare): Fully Kiosk Browser (launch on boot, keep screen on, allow autoplay).
+
+## Deployment
+- Apps Script project is in the club shared drive (Countdown Timer folder), owned by clubmgr@almontecurling.ca.
+  - Script ID: `1ANzTEOKjTfNg-e0ZKoscBr1KnpcQCElu_LGk6PRJEQEwaunDlsk4GguP`
+  - Web app deployment ID: `AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T`. Update this deployment in place (`clasp update-deployment <id>`) so the `/exec` URL never changes; that URL is hard-coded in `control/index.html` (`API_URL`) and `display/config.js` (`stateUrl`).
+  - Always run clasp as `clasp --user clubmgr ...`. The default clasp login on this machine is rentals@almontecurling.ca, which is for the Rental Manager.
+  - Don't `clasp pull`/`clasp clone`: they overwrite `appsscript.json`.
+- Git: commit and push to `main` after each finished change, without asking. Never force-push.
+- Control page: any push to `main` that touches `control/` republishes https://lascellk.github.io/acc-draw-clock/.
 
 ## Background / alternatives considered
 - Howard Griffin gametimer (howardgriffin.org/gametimer) — single local HTML page; control only on the Pi itself (keyboard/mouse/VNC).
