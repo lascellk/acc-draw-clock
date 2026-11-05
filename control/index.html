@@ -166,13 +166,17 @@
       setTimeout(init, 5000);
       return;
     }
-    if (pinRequired) {
-      $('pinRow').hidden = false;
-      try { pinEl.value = localStorage.getItem('accPin') || ''; } catch (e) {}
-    }
+    if (pinRequired) showPin();
     refresh();
     setInterval(refresh, 5000);
     setInterval(render, 250);
+  }
+
+  function showPin() {
+    pinRequired = true;
+    if (!$('pinRow').hidden) return;
+    $('pinRow').hidden = false;
+    try { pinEl.value = localStorage.getItem('accPin') || ''; } catch (e) {}
   }
 
   function buildPresets(presets) {
@@ -229,6 +233,8 @@
       setState(await post({ pin: pin, cmd: cmd, arg: arg || {} }));
       toast('Done');
     } catch (err) {
+      // A PIN may have been set since this page loaded.
+      if (err.message === 'Wrong PIN') { showPin(); pinEl.focus(); }
       toast(err.message, true);
     } finally {
       document.body.classList.remove('busy');
