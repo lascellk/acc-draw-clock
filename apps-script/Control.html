@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --bg: #f2f4f7; --card: #fff; --fg: #111; --muted: #667;
+      --accent: #0b5fff; --danger: #c8102e; --warn: #f5c400;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 12px 16px 40px; background: var(--bg); color: var(--fg);
+      font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    h1 { font-size: 20px; margin: 4px 0 12px; }
+    h2 { font-size: 15px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+    #now { text-align: center; transition: background-color .4s; }
+    #now.pre { background: #dbe8ff; }
+    #now.warn { background: var(--warn); }
+    #now.over { background: var(--danger); color: #fff; }
+    #nowLabel { font-size: 18px; font-weight: 600; min-height: 22px; }
+    #nowClock { font-size: 64px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    #nowSub { font-size: 15px; min-height: 18px; opacity: .75; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    button {
+      font: inherit; font-size: 18px; font-weight: 600; padding: 18px 10px; border-radius: 12px;
+      border: 0; background: #e6e9ef; color: var(--fg); cursor: pointer;
+    }
+    button:active { transform: scale(.98); }
+    button:disabled { opacity: .4; }
+    button.preset { background: var(--accent); color: #fff; }
+    button.preset small { display: block; font-weight: 400; font-size: 14px; opacity: .85; }
+    button.danger { background: var(--danger); color: #fff; }
+    .full { grid-column: 1 / -1; }
+
+    .seg { display: flex; gap: 6px; margin-bottom: 12px; }
+    .seg button { flex: 1; padding: 10px 4px; font-size: 15px; }
+    .seg button.on { background: var(--fg); color: #fff; }
+
+    #pinRow label { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+    #pin { flex: 1; font-size: 20px; padding: 10px; border: 1px solid #ccd; border-radius: 10px; }
+
+    #toast {
+      position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 12px; border-radius: 10px;
+      background: #222; color: #fff; text-align: center; opacity: 0; transition: opacity .3s; pointer-events: none;
+    }
+    #toast.show { opacity: 1; }
+    #toast.err { background: var(--danger); }
+    body.busy button { pointer-events: none; opacity: .6; }
+  </style>
+</head>
+<body>
+  <h1>ACC Draw Clock</h1>
+
+  <section id="now" class="card">
+    <div id="nowLabel"></div>
+    <div id="nowClock">--:--</div>
+    <div id="nowSub">Loading…</div>
+  </section>
+
+  <section id="pinRow" class="card" hidden>
+    <label>PIN <input id="pin" type="password" inputmode="numeric" autocomplete="off"></label>
+  </section>
+
+  <section class="card">
+    <h2>Start a draw</h2>
+    <div class="seg" id="delay">
+      <button data-min="0" class="on">Now</button>
+      <button data-min="5">In 5</button>
+      <button data-min="10">In 10</button>
+      <button data-min="15">In 15</button>
+    </div>
+    <div id="presets" class="grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Running draw</h2>
+    <div class="grid">
+      <button id="pauseBtn" class="full">Pause</button>
+      <button data-adj="-1">−1 min</button>
+      <button data-adj="1">+1 min</button>
+      <button id="stopBtn" class="danger full">Stop</button>
+    </div>
+  </section>
+
+  <div id="toast"></div>
+
+<script>
+  const PRESETS = <?!= presetsJson ?>;
+  const PIN_REQUIRED = <?!= JSON.stringify(pinRequired) ?>;
+
+  const $ = id => document.getElementById(id);
+  const pinEl = $('pin');
+  let state = null;
+  let offsetMs = 0;
+  let delayMin = 0;
+
+  // ---- setup
+  if (PIN_REQUIRED) {
+    $('pinRow').hidden = false;
+    try { pinEl.value = localStorage.getItem('accPin') || ''; } catch (e) {}
+  }
+
+  PRESETS.forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'preset';
+    b.textContent = p.label;
+    const small = document.createElement('small');
+    small.textContent = p.minutes + ' min';
+    b.appendChild(small);
+    b.onclick = () => startPreset(p);
+    $('presets').appendChild(b);
+  });
+
+  document.querySelectorAll('#delay button').forEach(b => {
+    b.onclick = () => {
+      delayMin = Number(b.dataset.min);
+      document.querySelectorAll('#delay button').forEach(x => x.classList.toggle('on', x === b));
+    };
+  });
+
+  document.querySelectorAll('[data-adj]').forEach(b => {
+    b.onclick = () => send('adjust', { minutes: Number(b.dataset.adj) });
+  });
+
+  $('pauseBtn').onclick = () => send(state && state.status === 'paused' ? 'resume' : 'pause');
+  $('stopBtn').onclick = () => {
+    if (confirm('Stop the clock?')) send('stop');
+  };
+
+  // ---- actions
+  function startPreset(p) {
+    if (state && state.status !== 'idle' &&
+        !confirm('A draw is already on the clock. Replace it with "' + p.label + '"?')) return;
+    send('start', { presetId: p.id, delayMin: delayMin });
+  }
+
+  function send(cmd, arg) {
+    const pin = pinEl.value.trim();
+    if (PIN_REQUIRED) {
+      if (!pin) { toast('Enter the club PIN first', true); pinEl.focus(); return; }
+      try { localStorage.setItem('accPin', pin); } catch (e) {}
+    }
+    document.body.classList.add('busy');
+    google.script.run
+      .withSuccessHandler(s => { document.body.classList.remove('busy'); setState(s); toast('Done'); })
+      .withFailureHandler(err => { document.body.classList.remove('busy'); toast(err.message || String(err), true); })
+      .command(pin, cmd, arg || {});
+  }
+
+  function refresh() {
+    google.script.run.withSuccessHandler(setState).getState();
+  }
+
+  function setState(s) {
+    state = s;
+    offsetMs = s.serverNow - Date.now();
+    render();
+  }
+
+  // ---- view (same rules as the display)
+  function fmt(ms) {
+    const total = Math.max(0, Math.ceil(ms / 1000));
+    const m = Math.floor(total / 60), s = total % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function render() {
+    if (!state) return;
+    const now = Date.now() + offsetMs;
+    const s = state;
+    let cls = '', clock = '--:--', sub = '';
+
+    if (s.status === 'idle') {
+      sub = 'No draw on the clock';
+    } else if (s.status === 'paused') {
+      const pre = s.startDelayMsWhenPaused > 0;
+      clock = fmt(pre ? s.startDelayMsWhenPaused : s.remainingMsWhenPaused);
+      sub = pre ? 'Paused (before start)' : 'Paused';
+      cls = pre ? 'pre' : (s.remainingMsWhenPaused <= s.warningMin * 60000 ? 'warn' : '');
+    } else if (now < s.startsAt) {
+      clock = fmt(s.startsAt - now); sub = 'Starts in'; cls = 'pre';
+    } else if (s.endsAt - now <= 0) {
+      clock = '00:00'; sub = "Time's up · +" + fmt(now - s.endsAt).replace(/^0/, ''); cls = 'over';
+    } else {
+      const ms = s.endsAt - now;
+      clock = fmt(ms);
+      if (ms <= s.warningMin * 60000) { cls = 'warn'; sub = 'Warning'; }
+      else sub = 'Ends ' + new Date(s.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    $('now').className = 'card ' + cls;
+    $('nowLabel').textContent = s.label || '';
+    $('nowClock').textContent = clock;
+    $('nowSub').textContent = sub;
+
+    const live = s.status !== 'idle';
+    $('pauseBtn').disabled = !live;
+    $('pauseBtn').textContent = s.status === 'paused' ? 'Resume' : 'Pause';
+    $('stopBtn').disabled = !live;
+    document.querySelectorAll('[data-adj]').forEach(b => { b.disabled = !live; });
+  }
+
+  let toastTimer;
+  function toast(msg, isErr) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = 'show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = ''; }, isErr ? 3500 : 1200);
+  }
+
+  refresh();
+  setInterval(refresh, 5000);
+  setInterval(render, 250);
+</script>
+</body>
+</html>
