@@ -35,7 +35,7 @@ function doGet(e) {
     return jsonOut_(publicState_(), params.callback);
   }
   if (params.mode === 'config') {
-    return jsonOut_({ presets: PRESETS, maxCustomMin: MAX_CUSTOM_MIN, pinRequired: Boolean(getProp_('CLUB_PIN')) }, params.callback);
+    return jsonOut_({ presets: PRESETS, maxCustomMin: MAX_CUSTOM_MIN, warningMin: warningDefault_(), pinRequired: Boolean(getProp_('CLUB_PIN')) }, params.callback);
   }
   const t = HtmlService.createTemplateFromFile('Control');
   t.presetsJson = JSON.stringify(PRESETS);
@@ -79,7 +79,7 @@ function command(pin, cmd, arg) {
     let s = loadState_();
     switch (cmd) {
       case 'start': {
-        const p = arg.presetId === 'custom' ? customPreset_(arg.minutes)
+        const p = arg.presetId === 'custom' ? customPreset_(arg.minutes, arg.warningMin)
           : PRESETS.find(x => x.id === arg.presetId);
         if (!p) throw new Error('Unknown preset');
         const delayMin = Math.min(Math.max(Number(arg.delayMin) || 0, 0), MAX_DELAY_MIN);
@@ -188,14 +188,22 @@ function warningDefault_() {
   return v > 0 ? v : DEFAULT_WARNING_MIN;
 }
 
-// A one-off countdown of the user's length. The warning is a quarter of the time, capped at the
-// usual warning, so a short countdown doesn't start out yellow (60+ min -> 15, 30 -> 7, 10 -> 2).
-function customPreset_(minutes) {
+// A one-off countdown of the user's length. The warning is optional: blank = a quarter of the
+// time, capped at the usual warning, so a short countdown doesn't start out yellow
+// (60+ min -> 15, 30 -> 7, 10 -> 2); otherwise 0 (no warning) up to one less than the countdown.
+function customPreset_(minutes, warningMin) {
   const m = Number(minutes);
   if (!Number.isInteger(m) || m < 1 || m > MAX_CUSTOM_MIN) {
     throw new Error('Enter whole minutes from 1 to ' + MAX_CUSTOM_MIN);
   }
-  return { label: m + '-min Countdown', minutes: m, warningMin: Math.min(warningDefault_(), Math.floor(m / 4)) };
+  let w = Math.min(warningDefault_(), Math.floor(m / 4));
+  if (warningMin != null && warningMin !== '') {
+    w = Number(warningMin);
+    if (!Number.isInteger(w) || w < 0 || w >= m) {
+      throw new Error('Warning must be whole minutes from 0 to ' + (m - 1));
+    }
+  }
+  return { label: m + '-min Countdown', minutes: m, warningMin: w };
 }
 
 function clearAfterMin_() {

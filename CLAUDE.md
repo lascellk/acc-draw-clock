@@ -51,7 +51,7 @@ Hosted on **GitHub Pages** (`control/` → https://lascellk.github.io/acc-draw-c
 
 Phone-friendly, big buttons:
 - Presets: 8-End Draw (95 min), 6-End Draw (65 min), Mixed Doubles (configurable list, `PRESETS` in `Code.gs`)
-- Custom: user-entered minutes (1–240, `MAX_CUSTOM_MIN`), labelled "N-min Countdown"; warning = a quarter of the time, capped at the usual 15. Replaced the 2-hr preset (2026-11-06). The fallback Apps Script control page has no Custom button.
+- Custom: user-entered minutes (1–240, `MAX_CUSTOM_MIN`), labelled "N-min Countdown"; optional warning minutes (0 = none, must be less than the countdown), blank = a quarter of the time, capped at the usual 15. `?mode=config` returns `maxCustomMin` and `warningMin` for the form. Replaced the 2-hr preset (2026-11-06). The fallback Apps Script control page has no Custom button.
   - End-based timing: when the clock runs out, teams finish the current end and play one more, so countdown ≈ (ends − 1.5) × ~14.6 min/end
 - Start now / Start in N minutes (delayed start)
 - Pause / Resume, +1 min / -1 min, Stop
