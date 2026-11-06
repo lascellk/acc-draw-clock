@@ -4,7 +4,7 @@
 # Needs SSH key login to the Pi. Override the target with PI=user@host.
 set -eu
 
-PI="${PI:-acc-admin@acc-clock.local}"
+PI="${PI:-acc-admin@acc-clock.taile237ab.ts.net}"  # Tailscale name: works at home and at the club
 AUDIO="${1:-hdmi}"
 cd "$(dirname "$0")/.."
 

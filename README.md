@@ -84,7 +84,9 @@ Use the standard **Raspberry Pi OS (64-bit) with desktop**: not Lite (it has no 
 5. Check you can reach it from a PC on the same network: `ssh <user>@acc-clock.local`
 
 #### 2. Set up the kiosk
-The club Pi is `acc-admin@acc-clock.local`. It's set up from a PC with the scripts in `pi/`.
+The club Pi is `acc-admin@acc-clock.local` on the same network, and `acc-admin@acc-clock.taile237ab.ts.net` from anywhere through Tailscale. It's set up from a PC with the scripts in `pi/`.
+
+**Remote access (Tailscale).** The Pi and the admin PC are on a private Tailscale network (lascellesk@gmail.com's account), so SSH and `pi/deploy.sh` work wherever the Pi is, with no changes to the club router. Key expiry is turned off for the Pi in the Tailscale admin page; otherwise it would have to log in again every 180 days, which the overlay file system wouldn't keep. To add another PC, install Tailscale on it and sign in to the same account. Raspberry Pi Connect (connect.raspberrypi.com) is also on, for screen sharing and a browser terminal.
 
 1. **One time: SSH key login.** In Git Bash, run `ssh-keygen -t ed25519` if you don't have a key yet. Then in PowerShell run this and type the Pi password once:
    ```
