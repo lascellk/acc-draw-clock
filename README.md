@@ -154,3 +154,4 @@ Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
 - The **Buzzer** checkbox on the control page mutes or unmutes the TV's sounds. It's on by default and stays as set across draws.
 - Sounds only play on changes the display sees as they happen, so rebooting the TV mid-draw won't sound the start horn again.
 - The control page shows the same countdown as the display. It also has Start now / in 5-10-15 min, Pause/Resume, ±1 min and Stop.
+- **Custom** starts a countdown of any length from 1 to 240 minutes. Tap it, type the minutes, then Start. The phone remembers the last number. Its warning comes at a quarter of the time, up to the usual 15 minutes, so short countdowns don't start out yellow.

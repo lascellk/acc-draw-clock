@@ -18,9 +18,10 @@
 const PRESETS = [
   { id: 'ends8', label: '8-End Draw', minutes: 95 },
   { id: 'ends6', label: '6-End Draw', minutes: 65 },
-  { id: 'draw120', label: '2-hr Draw', minutes: 120 },
   { id: 'md', label: 'Mixed Doubles', minutes: 90 },
 ];
+// The control page also has a Custom button: start with presetId 'custom' and minutes 1..MAX_CUSTOM_MIN.
+const MAX_CUSTOM_MIN = 240;
 
 const DEFAULT_WARNING_MIN = 15;
 const DEFAULT_CLEAR_AFTER_MIN = 25; // 95-min draw + 25 = back to the logo 2 h after the start
@@ -34,7 +35,7 @@ function doGet(e) {
     return jsonOut_(publicState_(), params.callback);
   }
   if (params.mode === 'config') {
-    return jsonOut_({ presets: PRESETS, pinRequired: Boolean(getProp_('CLUB_PIN')) }, params.callback);
+    return jsonOut_({ presets: PRESETS, maxCustomMin: MAX_CUSTOM_MIN, pinRequired: Boolean(getProp_('CLUB_PIN')) }, params.callback);
   }
   const t = HtmlService.createTemplateFromFile('Control');
   t.presetsJson = JSON.stringify(PRESETS);
@@ -78,7 +79,8 @@ function command(pin, cmd, arg) {
     let s = loadState_();
     switch (cmd) {
       case 'start': {
-        const p = PRESETS.find(x => x.id === arg.presetId);
+        const p = arg.presetId === 'custom' ? customPreset_(arg.minutes)
+          : PRESETS.find(x => x.id === arg.presetId);
         if (!p) throw new Error('Unknown preset');
         const delayMin = Math.min(Math.max(Number(arg.delayMin) || 0, 0), MAX_DELAY_MIN);
         const startsAt = now + delayMin * 60000;
@@ -184,6 +186,16 @@ function getProp_(key) {
 function warningDefault_() {
   const v = Number(getProp_('WARNING_MIN'));
   return v > 0 ? v : DEFAULT_WARNING_MIN;
+}
+
+// A one-off countdown of the user's length. The warning is a quarter of the time, capped at the
+// usual warning, so a short countdown doesn't start out yellow (60+ min -> 15, 30 -> 7, 10 -> 2).
+function customPreset_(minutes) {
+  const m = Number(minutes);
+  if (!Number.isInteger(m) || m < 1 || m > MAX_CUSTOM_MIN) {
+    throw new Error('Enter whole minutes from 1 to ' + MAX_CUSTOM_MIN);
+  }
+  return { label: m + '-min Countdown', minutes: m, warningMin: Math.min(warningDefault_(), Math.floor(m / 4)) };
 }
 
 function clearAfterMin_() {

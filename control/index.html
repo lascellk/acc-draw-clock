@@ -53,6 +53,17 @@
     button:disabled { opacity: .4; }
     button.preset { background: var(--accent); color: #fff; border-bottom: 3px solid var(--gold); }
     button.preset small { display: block; font-weight: 400; font-size: 14px; color: var(--cream); opacity: .85; }
+    button.preset.custom { background: var(--navy-deep); }
+    button.preset.custom.open { background: var(--gold); color: var(--navy-deep); }
+    button.preset.custom.open small { color: var(--navy-deep); }
+    #customForm { display: flex; gap: 10px; margin-top: 10px; align-items: stretch; }
+    #customForm[hidden] { display: none; }
+    #customForm label { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 18px; font-weight: 600; color: var(--navy); }
+    #customMin {
+      width: 100%; min-width: 0; font: inherit; font-size: 26px; text-align: center; padding: 10px;
+      border: 2px solid var(--gold); border-radius: 12px; color: var(--navy);
+    }
+    #customForm button { flex: none; padding: 0 22px; }
     button.danger { background: var(--danger); color: #fff; }
     .full { grid-column: 1 / -1; }
 
@@ -118,6 +129,10 @@
         <button data-min="15">In 15</button>
       </div>
       <div id="presets" class="grid"></div>
+      <form id="customForm" hidden>
+        <label><input id="customMin" type="number" inputmode="numeric" min="1" max="240" step="1" aria-label="Countdown minutes"> min</label>
+        <button type="submit" class="preset">Start</button>
+      </form>
     </section>
 
     <section class="card">
@@ -153,6 +168,7 @@
   let state = null;
   let offsetMs = 0;
   let delayMin = 0;
+  let maxCustomMin = 240;
 
   // ---- server calls (plain fetch, no Google sign-in involved)
   async function getJson(mode) {
@@ -178,6 +194,7 @@
   async function init() {
     try {
       const cfg = await getJson('config');
+      if (cfg.maxCustomMin) maxCustomMin = cfg.maxCustomMin;
       buildPresets(cfg.presets);
       if (!cfg.pinRequired) return unlock('');
       const saved = loadPin();
@@ -259,6 +276,50 @@
       b.onclick = () => startPreset(p);
       $('presets').appendChild(b);
     });
+    // Custom: opens a minutes box under the buttons.
+    const c = document.createElement('button');
+    c.className = 'preset custom';
+    c.id = 'customBtn';
+    c.textContent = 'Custom';
+    const small = document.createElement('small');
+    small.textContent = 'Set minutes';
+    c.appendChild(small);
+    c.onclick = () => toggleCustom();
+    $('presets').appendChild(c);
+    // Odd number of buttons: let Custom fill the last row.
+    if ((presets.length + 1) % 2) c.classList.add('full');
+    $('customMin').max = maxCustomMin;
+  }
+
+  function toggleCustom(open) {
+    const form = $('customForm');
+    open = open != null ? open : form.hidden;
+    form.hidden = !open;
+    $('customBtn').classList.toggle('open', open);
+    if (open) {
+      $('customMin').value = loadCustom();
+      $('customMin').focus();
+      $('customMin').select();
+    }
+  }
+
+  $('customForm').onsubmit = e => {
+    e.preventDefault();
+    const m = Number($('customMin').value);
+    if (!Number.isInteger(m) || m < 1 || m > maxCustomMin) {
+      toast('Enter whole minutes from 1 to ' + maxCustomMin, true);
+      return;
+    }
+    saveCustom(m);
+    $('customMin').blur();
+    startPreset({ id: 'custom', label: m + '-min Countdown', minutes: m });
+  };
+
+  function loadCustom() {
+    try { return localStorage.getItem('accCustomMin') || ''; } catch (e) { return ''; }
+  }
+  function saveCustom(m) {
+    try { localStorage.setItem('accCustomMin', String(m)); } catch (e) {}
   }
 
   document.querySelectorAll('#delay button').forEach(b => {
@@ -288,7 +349,8 @@
   function startPreset(p) {
     if (state && state.status !== 'idle' &&
         !confirm('A draw is already on the clock. Replace it with "' + p.label + '"?')) return;
-    send('start', { presetId: p.id, delayMin: delayMin });
+    send('start', { presetId: p.id, minutes: p.minutes, delayMin: delayMin })
+      .then(ok => { if (ok && p.id === 'custom') toggleCustom(false); });
   }
 
   async function send(cmd, arg) {
@@ -296,10 +358,12 @@
     try {
       setState(await post({ pin: pin, cmd: cmd, arg: arg || {} }));
       toast('Done');
+      return true;
     } catch (err) {
       // The PIN was set or changed since this phone unlocked.
       if (err.message === 'Wrong PIN') lock('The club PIN has changed — enter the new one');
       else toast(err.message, true);
+      return false;
     } finally {
       document.body.classList.remove('busy');
     }
