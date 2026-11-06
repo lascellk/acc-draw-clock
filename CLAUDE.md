@@ -100,4 +100,4 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Pi at the club: network there (extender bridge or club Wi-Fi) still to set up; needs the overlay off first
+- Pi at the club: plan (2026-11-06) is the same Wi-Fi extender as at home, switched to the club Wi-Fi, Pi on its Ethernet port. The Pi uses DHCP with no fixed DNS, so it needs no changes and the overlay stays on. After the move: check over Tailscale (screen, sound, connection).
