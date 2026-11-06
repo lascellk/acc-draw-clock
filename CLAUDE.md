@@ -66,6 +66,7 @@ Phone-friendly, big buttons:
 ### Devices
 - Raspberry Pi 4 (main): built and online. `acc-admin@acc-clock.local`, Raspberry Pi OS 64-bit (Debian 13 Trixie), labwc desktop with autologin, browser is `chromium`. This PC logs in by SSH key; `sudo` needs a password, so keep Pi setup to user-level changes.
   - Chromium `--kiosk` with `--autoplay-policy=no-user-gesture-required`, started from `~/.config/labwc/autostart` via `lwrespawn`; screen blanking off (no `swayidle` line).
+  - **Overlay file system ON, boot partition read-only** (since 2026-11-06). Any change on the Pi, including `sh pi/deploy.sh`, lasts only until the next reboot. To make a lasting change the user turns the overlay off in `sudo raspi-config` (Performance → Overlay File System) and reboots, then the change is made, then the overlay goes back on. Check with `findmnt -no FSTYPE /` (`overlay` = on). Tell the user when a display deploy won't survive a reboot.
   - Network: Ethernet only. Wi-Fi radio turned off 2026-11-05 at the user's request (`sudo nmcli radio wifi on|off`; needs the user's password). Hidden pointer confirmed after reboot.
   - Sound: TV over HDMI for now (`sh pi/deploy.sh`); `jack` option for the 3.5 mm output later.
   - Commands run over SSH that touch the desktop need the labwc session env (`XDG_*`, `DBUS_SESSION_BUS_ADDRESS`, `WAYLAND_DISPLAY=wayland-0`); `grim` takes screenshots to check the screen.
@@ -80,7 +81,7 @@ Phone-friendly, big buttons:
 - Git: commit and push to `main` after each finished change, without asking. Never force-push.
 - Backend: if `apps-script/` changed, also `clasp --user clubmgr push --force` then `clasp --user clubmgr update-deployment <deployment ID> --description "<note>"`, without asking.
 - Control page: any push to `main` that touches `control/` republishes https://lascellk.github.io/acc-draw-clock/.
-- Display: if `display/` or `pi/` changed, also run `sh pi/deploy.sh` (Git Bash) to update the Pi, without asking.
+- Display: if `display/` or `pi/` changed, also run `sh pi/deploy.sh` (Git Bash) to update the Pi, without asking. While the overlay is on this only lasts until the next reboot (see Devices), so say so.
 
 ## Background / alternatives considered
 - Howard Griffin gametimer (howardgriffin.org/gametimer) — single local HTML page; control only on the Pi itself (keyboard/mouse/VNC).
@@ -98,4 +99,4 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Pi: kiosk comes up after reboot (confirmed 2026-11-05); hidden pointer needs confirming after a reboot. Last step: overlay file system (needs `sudo raspi-config`, done by the user)
+- Pi at the club: network there (extender bridge or club Wi-Fi) still to set up; needs the overlay off first
