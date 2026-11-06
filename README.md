@@ -95,7 +95,7 @@ The club Pi is `acc-admin@acc-clock.local`. It's set up from a PC with the scrip
    sh pi/deploy.sh          # sound through the TV (HDMI)
    sh pi/deploy.sh jack     # sound through the 3.5 mm jack instead
    ```
-   It copies `display/` to `~/acc-clock` on the Pi and runs [pi/setup.sh](pi/setup.sh) there, then starts or restarts the kiosk. Run it again any time `display/` changes. Use `PI=user@host sh pi/deploy.sh` for a different Pi.
+   It copies `display/` to `~/acc-clock` on the Pi and runs [pi/setup.sh](pi/setup.sh) there, then starts or restarts the kiosk. Run it again any time `display/` changes. Use `PI=user@host sh pi/deploy.sh` for a different Pi. If the Pi's overlay file system is on (step 4), it still deploys, but it warns that the update will be lost at the next reboot.
 
 What `setup.sh` does (no `sudo` needed):
 - Adds Chromium in kiosk mode to `~/.config/labwc/autostart`, so it starts on login. The Pi logs in automatically. Pi OS's `lwrespawn` reopens Chromium within a second if it's closed or crashes.
