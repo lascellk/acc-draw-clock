@@ -7,7 +7,8 @@
  *
  * URL options:  ?url=<exec URL>   override config.js
  *               ?demo=95          run a local 95-min demo (no server); ?warn=1 sets warning minutes
- * Keys:         F = fullscreen, 1/2/3 = test start/warning/end sounds
+ *               ?night=1          force the night blackout on (for testing)
+ * Keys:         F = fullscreen, 1/2 = test start/end sounds
  */
 (function () {
   'use strict';
@@ -115,7 +116,7 @@
         sub = 'Ends ' + timeOfDay(state.endsAt);
     }
 
-    document.body.className = v.phase === 'idle' ? 'idle' + (logoOk() ? ' has-logo' : '')
+    document.body.className = v.phase === 'idle' ? 'idle' + (logoOk() ? ' has-logo' : '') + (isNight(now) ? ' night' : '')
       : v.colour + (v.phase === 'paused' ? ' paused' : '');
     setText(els.label, label);
     setText(els.sub, sub);
@@ -125,6 +126,24 @@
     updateSoundGate();
 
     if (state) handleSounds(v, now);
+  }
+
+  // Night blackout: the screen goes black between blackoutFrom and blackoutTo (local time, "HH:MM")
+  // while no draw is on the clock. Any draw, even a delayed one, shows normally. The hours come
+  // from the server so they can change without updating the Pi; the defaults cover offline starts.
+  const forceNight = params.get('night') === '1';
+  function isNight(now) {
+    if (forceNight) return true;
+    const from = hhmm(state && state.blackoutFrom, 23 * 60);
+    const to = hhmm(state && state.blackoutTo, 8 * 60);
+    if (from === to) return false;          // same time = blackout off
+    const d = new Date(now);
+    const m = d.getHours() * 60 + d.getMinutes();
+    return from < to ? m >= from && m < to : m >= from || m < to;
+  }
+  function hhmm(text, fallback) {
+    const match = /^(\d{1,2}):(\d{2})$/.exec(text || '');
+    return match ? Number(match[1]) * 60 + Number(match[2]) : fallback;
   }
 
   function setText(el, text) {
@@ -174,8 +193,8 @@
       if (runId !== lastRunId) {
         if (runId && live(phase) && now - state.startsAt < 15000) buzz('start');
       } else if (phase !== lastPhase) {
+        // No sound at the warning: curlers could take it for time-up. The screen still turns yellow.
         if (lastPhase === 'pre' && live(phase)) buzz('start');
-        else if (lastPhase === 'run' && phase === 'warn') buzz('warning');
         else if (live(lastPhase) && phase === 'over') buzz('end');
       }
     }
@@ -183,14 +202,13 @@
     lastPhase = phase;
   }
 
-  // Drop start.mp3 / warning.mp3 / end.mp3 into display/sounds/ to replace the built-in tones.
-  const SOUND_FILES = { start: 'sounds/start.mp3', warning: 'sounds/warning.mp3', end: 'sounds/end.mp3' };
+  // Drop start.mp3 / end.mp3 into display/sounds/ to replace the built-in tones.
+  const SOUND_FILES = { start: 'sounds/start.mp3', end: 'sounds/end.mp3' };
 
   // [frequency Hz, start s, duration s]
   const TONES = {
-    start:   [[660, 0, 0.25], [880, 0.3, 0.6]],
-    warning: [[880, 0, 0.3], [880, 0.45, 0.3], [880, 0.9, 0.3]],
-    end:     [[440, 0, 1.2], [440, 1.5, 2.0]],
+    start: [[660, 0, 0.25], [880, 0.3, 0.6]],
+    end:   [[440, 0, 1.2], [440, 1.5, 2.0]],
   };
 
   function play(name) {
@@ -245,8 +263,7 @@
       if (document.fullscreenElement) document.exitFullscreen();
       else document.documentElement.requestFullscreen().catch(() => {});
     } else if (k === '1') play('start');
-    else if (k === '2') play('warning');
-    else if (k === '3') play('end');
+    else if (k === '2') play('end');
   });
 
   // ---------------------------------------------------------------- boot

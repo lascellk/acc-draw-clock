@@ -5,7 +5,7 @@ Countdown clock for the Almonte Curling Club rink. Keeps draws on schedule (defa
 ## Goal
 - A TV in the rink shows a big countdown full-screen (kiosk mode).
 - Members start a preset from their phone or a tablet by the door.
-- Sounds at start, at the warning, and at time-up.
+- Sounds at start and at time-up (the warning is silent).
 
 ## Repo layout
 ```
@@ -40,6 +40,8 @@ pi/            Pi kiosk: deploy.sh (Git Bash on the PC) copies display/ to the P
     "warningMin": 15,
     "buzzer": true,
     "clearAfterMin": 25,
+    "blackoutFrom": "23:00",
+    "blackoutTo": "08:00",
     "serverNow": 1730816700000
   }
   ```
@@ -61,7 +63,8 @@ Phone-friendly, big buttons:
 - Polls the state endpoint every 5-10 s; computes the countdown locally from `endsAt` + clock offset, so polling never makes the clock jump and an internet drop mid-draw doesn't stop it.
 - Huge digits (MM:SS; 95 min fits), auto-scales to any screen.
 - Whole background changes colour: normal → yellow at warning → red at zero.
-- Plays start / warning / end sounds (mp3) through a powered speaker. Future: relay-triggered horn.
+- Plays start and time-up sounds (mp3) through the TV/speaker. No sound at the warning (curlers could take it for time-up), only the yellow screen. Future: relay-triggered horn.
+- Night blackout: black screen from `BLACKOUT_FROM` to `BLACKOUT_TO` (script properties, default 23:00-08:00, sent in the state) while idle; any draw wakes it. Test with `?night=1`.
 
 ### Devices
 - Raspberry Pi 4 (main): built and online. `acc-admin@acc-clock.local`, Raspberry Pi OS 64-bit (Debian 13 Trixie), labwc desktop with autologin, browser is `chromium`. This PC logs in by SSH key; `sudo` needs a password, so keep Pi setup to user-level changes.

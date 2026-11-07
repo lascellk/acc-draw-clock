@@ -6,9 +6,11 @@
  *
  * Script properties (Project Settings -> Script properties), all optional:
  *   CLUB_PIN      PIN required to use the controls. Unset = controls open.
- *   WARNING_MIN   Minutes before end to switch to yellow + warning sound (default 15).
+ *   WARNING_MIN   Minutes before end to switch to yellow (default 15). The warning is silent.
  *   CLEAR_AFTER_MIN  Minutes after time-up before the draw clears itself and the display
  *                 goes back to the logo (default 25; 0 = stay on "Time's up" until Stop).
+ *   BLACKOUT_FROM / BLACKOUT_TO  "HH:MM" local time; the TV is black between them while no
+ *                 draw is on the clock (default 23:00 to 08:00; the same time for both = off).
  *   LOG_SHEET_ID  Spreadsheet ID; every command is appended to its first sheet.
  */
 
@@ -173,6 +175,8 @@ function publicState_() {
   const s = loadState_();
   s.buzzer = getProp_(BUZZER_KEY) !== 'off';
   s.clearAfterMin = clearAfterMin_();
+  s.blackoutFrom = timeProp_('BLACKOUT_FROM', '23:00');
+  s.blackoutTo = timeProp_('BLACKOUT_TO', '08:00');
   s.serverNow = Date.now();
   return s;
 }
@@ -204,6 +208,12 @@ function customPreset_(minutes, warningMin) {
     }
   }
   return { label: m + '-min Countdown', minutes: m, warningMin: w };
+}
+
+// "HH:MM" from a script property, or the default if it's unset or malformed.
+function timeProp_(key, fallback) {
+  const v = String(getProp_(key) || '').trim();
+  return /^([01]?\d|2[0-3]):[0-5]\d$/.test(v) ? v : fallback;
 }
 
 function clearAfterMin_() {

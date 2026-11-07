@@ -15,7 +15,8 @@ The control page is hosted on GitHub Pages, not Apps Script. Apps Script's own p
 
 Open `display/index.html?demo=1&warn=0.5` in Chrome. That runs a 1-minute demo with a 30-second warning.
 - Press **F** for fullscreen.
-- Press **1 / 2 / 3** to test the start, warning and end sounds.
+- Press **1 / 2** to test the start and end sounds. (The warning is silent.)
+- Add `&night=1` to see the night blackout (a black screen).
 - Click once if a "Sound is blocked" bar appears.
 
 ## 2. Deploy the Apps Script web app
@@ -54,7 +55,7 @@ To change the preset buttons, edit `PRESETS` at the top of `Code.gs` and redeplo
 
 Paste the `/exec` URL into `stateUrl` in [display/config.js](display/config.js). Or add it to the page address: `index.html?url=https://script.google.com/macros/s/.../exec`.
 
-To use your own sounds, add `start.mp3`, `warning.mp3` and `end.mp3` to `display/sounds/`. Any file that's missing falls back to a built-in tone.
+To use your own sounds, add `start.mp3` and `end.mp3` to `display/sounds/`. Any file that's missing falls back to a built-in tone.
 
 ## 4. Kiosk devices
 
@@ -150,7 +151,8 @@ Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
 - Background colours (club palette):
   - Dark navy while running, with cream digits.
   - Lighter navy before a delayed start.
-  - **Bright yellow with black digits** at the warning: the last 15 min, or whatever `WARNING_MIN` is set to.
+  - **Bright yellow with black digits** at the warning: the last 15 min, or whatever `WARNING_MIN` is set to. The warning makes no sound, so curlers don't take it for time-up.
+  - **Black from 23:00 to 08:00** while no draw is on the clock, since the TV stays on all the time. Starting a draw, even a delayed one, wakes it at once. Change the hours with the `BLACKOUT_FROM` / `BLACKOUT_TO` script properties (`HH:MM`; the same time for both turns it off). No Pi update needed.
   - **Club red with blinking white `00:00`** at time up, plus how long it's been over. After 25 minutes over (`CLEAR_AFTER_MIN`), so 2 hours after an 8-end draw starts, it clears itself and goes back to the logo. Stop or starting the next draw clears it sooner.
   - When nothing is running, it shows the club logo and the time of day.
 - The **Buzzer** checkbox on the control page mutes or unmutes the TV's sounds. It's on by default and stays as set across draws.
