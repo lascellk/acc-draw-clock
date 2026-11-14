@@ -103,4 +103,7 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Pi at the club: plan (2026-11-06) is the same Wi-Fi extender as at home, switched to the club Wi-Fi, Pi on its Ethernet port. The Pi uses DHCP with no fixed DNS, so it needs no changes and the overlay stays on. After the move: check over Tailscale (screen, sound, connection).
+- Not yet tested at the rink: a real draw start (start/time-up sounds through the TV) and a Custom countdown from a phone.
+
+## Installed
+- Pi installed at the rink 2026-11-14: same Wi-Fi extender, switched to the club Wi-Fi, Pi on its Ethernet port (DHCP, no Pi changes, overlay still on). Checked over Tailscale the same day: kiosk running, logo + time on screen, HDMI is the default sink at full volume, internet and the state endpoint reachable. Tailscale goes through a DERP relay at the club (no direct connection), which is fine for SSH.
