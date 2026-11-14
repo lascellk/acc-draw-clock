@@ -141,12 +141,15 @@
     $('presets').appendChild(b);
   });
 
+  function setDelay(min) {
+    delayMin = min;
+    document.querySelectorAll('#delay button').forEach(x => x.classList.toggle('on', Number(x.dataset.min) === min));
+  }
   document.querySelectorAll('#delay button').forEach(b => {
-    b.onclick = () => {
-      delayMin = Number(b.dataset.min);
-      document.querySelectorAll('#delay button').forEach(x => x.classList.toggle('on', x === b));
-    };
+    b.onclick = () => setDelay(Number(b.dataset.min));
   });
+  // Back to "Now" once the draw on the clock ends (time's up or Stop).
+  let wasLive = false;
 
   document.querySelectorAll('[data-adj]').forEach(b => {
     b.onclick = () => send('adjust', { minutes: Number(b.dataset.adj) });
@@ -225,6 +228,10 @@
       if (ms <= s.warningMin * 60000) { cls = 'warn'; sub = 'Warning'; }
       else sub = 'Ends ' + new Date(s.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     }
+
+    const draw = s.status === 'paused' || (s.status === 'running' && s.endsAt - now > 0);
+    if (wasLive && !draw) setDelay(0);
+    wasLive = draw;
 
     $('now').className = 'card ' + cls;
     $('nowLabel').textContent = s.label || '';
