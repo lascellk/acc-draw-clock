@@ -29,7 +29,12 @@ const DEFAULT_WARNING_MIN = 15;
 const DEFAULT_CLEAR_AFTER_MIN = 25; // 95-min draw + 25 = back to the logo 2 h after the start
 const MAX_DELAY_MIN = 120;
 const STATE_KEY = 'STATE';
-const BUZZER_KEY = 'BUZZER'; // 'off' mutes the display; anything else (incl. unset) = on
+// Buzzer off lasts for one draw only, then it's back on by itself:
+//   'off:<runId>'  muted until that draw is stopped, cleared, or 1 min past time's up
+//   'off:next'     switched off with no draw on the clock: mutes the next draw started
+//   anything else (incl. unset, 'on') = on
+const BUZZER_KEY = 'BUZZER';
+const BUZZER_GRACE_MS = 60000; // stays muted through the time-up horn, then turns back on
 
 function doGet(e) {
   const params = (e && e.parameter) || {};
@@ -84,6 +89,8 @@ function command(pin, cmd, arg) {
         const p = arg.presetId === 'custom' ? customPreset_(arg.minutes, arg.warningMin)
           : PRESETS.find(x => x.id === arg.presetId);
         if (!p) throw new Error('Unknown preset');
+        // Muted for a draw still on the clock, or for "the next draw": the new draw stays muted.
+        const muted = !buzzerOn_(s, now, 0);
         const delayMin = Math.min(Math.max(Number(arg.delayMin) || 0, 0), MAX_DELAY_MIN);
         const startsAt = now + delayMin * 60000;
         s = {
@@ -96,6 +103,7 @@ function command(pin, cmd, arg) {
           warningMin: p.warningMin != null ? p.warningMin : warningDefault_(),
           runId: now,
         };
+        setBuzzer_(muted ? 'off:' + s.runId : 'on');
         break;
       }
       case 'pause':
@@ -124,10 +132,11 @@ function command(pin, cmd, arg) {
       }
       case 'stop':
         s = idleState_();
+        setBuzzer_('on');
         break;
       case 'buzzer':
-        // Kept outside the draw state so it survives Stop / new draws.
-        PropertiesService.getScriptProperties().setProperty(BUZZER_KEY, arg.on ? 'on' : 'off');
+        // Off applies to the draw on the clock, or to the next one if none is running.
+        setBuzzer_(arg.on ? 'on' : 'off:' + (drawLive_(s, now, 0) ? s.runId : 'next'));
         break;
       default:
         throw new Error('Unknown command: ' + cmd);
@@ -173,7 +182,7 @@ function saveState_(s) {
 
 function publicState_() {
   const s = loadState_();
-  s.buzzer = getProp_(BUZZER_KEY) !== 'off';
+  s.buzzer = buzzerOn_(s, Date.now(), BUZZER_GRACE_MS);
   s.clearAfterMin = clearAfterMin_();
   s.blackoutFrom = timeProp_('BLACKOUT_FROM', '23:00');
   s.blackoutTo = timeProp_('BLACKOUT_TO', '08:00');
@@ -185,6 +194,22 @@ function publicState_() {
 
 function getProp_(key) {
   return PropertiesService.getScriptProperties().getProperty(key);
+}
+
+// A draw is on the clock: paused, waiting to start, or counting down (plus graceMs past zero).
+function drawLive_(s, now, graceMs) {
+  return s.status === 'paused' || (s.status === 'running' && now < s.endsAt + graceMs);
+}
+
+function buzzerOn_(s, now, graceMs) {
+  const v = getProp_(BUZZER_KEY) || 'on';
+  if (v === 'off' || v === 'off:next') return false; // 'off' = set by an older version
+  if (v.indexOf('off:') !== 0) return true;
+  return !(String(s.runId) === v.slice(4) && drawLive_(s, now, graceMs));
+}
+
+function setBuzzer_(v) {
+  PropertiesService.getScriptProperties().setProperty(BUZZER_KEY, v);
 }
 
 function warningDefault_() {

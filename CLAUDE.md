@@ -57,6 +57,7 @@ Phone-friendly, big buttons:
   - End-based timing: when the clock runs out, teams finish the current end and play one more, so countdown ≈ (ends − 1.5) × ~14.6 min/end
 - Start now / Start in N minutes (delayed start)
 - Pause / Resume, +1 min / -1 min, Stop
+- The delay choice (kept on each phone) goes back to "Now" when the draw ends or is stopped
 
 ### 3. Display page
 - Static HTML/CSS/JS stored locally on the device (not served from Apps Script — avoids the Google iframe/banner and keeps working offline).
@@ -97,7 +98,7 @@ Phone-friendly, big buttons:
 - Warning default: 15 min (`WARNING_MIN` script property or per preset)
 - Display device: Raspberry Pi 4 (Raspberry Pi OS 64-bit with desktop); Android box is the spare
 - Theme: club logo colours (navy/red/gold/cream); warning stays bright yellow for visibility
-- Buzzer on/off toggle on the control page, default on
+- Buzzer on/off toggle on the control page, default on. Off lasts one draw (stored on the server, shared by all phones): back on at Stop, at auto-clear, or 1 min after time's up; off with no draw on the clock mutes the next draw
 - Time's-up screen clears itself 25 min after zero, so a 95-min draw is back to the logo 2 h after it starts (`CLEAR_AFTER_MIN` script property, 0 = never); server, display and control page all apply it
 
 ## Open decisions
