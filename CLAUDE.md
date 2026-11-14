@@ -103,7 +103,7 @@ Phone-friendly, big buttons:
 ## Open decisions
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
-- Not yet tested at the rink: a real draw start (start/time-up sounds through the TV) and a Custom countdown from a phone.
 
 ## Installed
 - Pi installed at the rink 2026-11-14: same Wi-Fi extender, switched to the club Wi-Fi, Pi on its Ethernet port (DHCP, no Pi changes, overlay still on). Checked over Tailscale the same day: kiosk running, logo + time on screen, HDMI is the default sink at full volume, internet and the state endpoint reachable. Tailscale goes through a DERP relay at the club (no direct connection), which is fine for SSH.
+- Tested on site by the user 2026-11-14: draw start from a phone, Custom countdown with warning, start and time-up sounds through the TV, silent yellow warning, red at zero. All working as designed.
