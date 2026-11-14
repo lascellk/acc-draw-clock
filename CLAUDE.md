@@ -82,7 +82,7 @@ Phone-friendly, big buttons:
   - Web app deployment ID: `AKfycbwU_wM84nwdgzD-wbVRGAq7vwXXuVEgfHiOFh1I4ZcPjYek5JcBRp7nkUwduYVeRo8T`. Update this deployment in place (`clasp update-deployment <id>`) so the `/exec` URL never changes; that URL is hard-coded in `control/index.html` (`API_URL`) and `display/config.js` (`stateUrl`).
   - Always run clasp as `clasp --user clubmgr ...`. The default clasp login on this machine is rentals@almontecurling.ca, which is for the Rental Manager.
   - Don't `clasp pull`/`clasp clone`: they overwrite `appsscript.json`.
-- Git: commit and push to `main` after each finished change, without asking. Never force-push.
+- Git: before starting any change, `git pull --ff-only` so work starts from the latest GitHub code (the user works from several machines). If the pull can't fast-forward (local and GitHub have both changed), stop and tell the user. Commit and push to `main` after each finished change, without asking. Never force-push.
 - Backend: if `apps-script/` changed, also `clasp --user clubmgr push --force` then `clasp --user clubmgr update-deployment <deployment ID> --description "<note>"`, without asking.
 - Control page: any push to `main` that touches `control/` republishes https://lascellk.github.io/acc-draw-clock/.
 - Display: if `display/` or `pi/` changed, also run `sh pi/deploy.sh` (Git Bash) to update the Pi, without asking. While the overlay is on this only lasts until the next reboot (see Devices), so say so.
