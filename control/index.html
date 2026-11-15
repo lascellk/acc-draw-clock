@@ -121,7 +121,7 @@
       <div id="nowLabel"></div>
       <div id="nowClock">--:--</div>
       <div id="nowSub">Loading…</div>
-      <div id="bonspielNote" hidden>Bonspiel draw: run it from the Bonspiel Manager</div>
+      <div id="bonspielNote" hidden>Scoreboard draw: run it from the Bonspiel Manager</div>
     </section>
 
     <section class="card">
@@ -361,8 +361,8 @@
   // warning: the bonspiel scoreboard doesn't follow changes made here, so the two would show different times.
   let bonspielOnClock = false;
   function overrideOk(action) {
-    return !bonspielOnClock || confirm('This bonspiel draw is run from the Bonspiel Manager. ' + action +
-      ' here only changes the rink TV, not the bonspiel scoreboard, so they will show different times. Go ahead anyway?');
+    return !bonspielOnClock || confirm('This draw is run from the Bonspiel Manager scoreboard. ' + action +
+      ' here only changes the rink TV, not the scoreboard, so they will show different times. Go ahead anyway?');
   }
 
   document.querySelectorAll('[data-adj]').forEach(b => {
