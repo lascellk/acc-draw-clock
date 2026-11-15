@@ -64,6 +64,7 @@ Phone-friendly, big buttons:
 - Static HTML/CSS/JS stored locally on the device (not served from Apps Script — avoids the Google iframe/banner and keeps working offline).
 - Polls the state endpoint every 5-10 s; computes the countdown locally from `endsAt` + clock offset, so polling never makes the clock jump and an internet drop mid-draw doesn't stop it.
 - Huge digits (MM:SS; 95 min fits), auto-scales to any screen.
+- Delayed start: "Draw starts in:" on top, smaller gold digits (40% of the height instead of 62%), the draw name and start time below.
 - Whole background changes colour: normal → yellow at warning → red at zero.
 - Plays start and time-up sounds (mp3) through the TV/speaker. No sound at the warning (curlers could take it for time-up), only the yellow screen. Future: relay-triggered horn.
 - Night blackout: black screen from `BLACKOUT_FROM` to `BLACKOUT_TO` (script properties, default 23:00-08:00, sent in the state) while idle; any draw wakes it. Test with `?night=1`.

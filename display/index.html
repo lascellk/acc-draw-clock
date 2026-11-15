@@ -17,7 +17,10 @@
     body.pre  { --bg: #1e3364; }
     body.warn { --bg: #f5c400; --fg: #111; --muted: rgba(0, 0, 0, .65); }
     body.over { --bg: #b3222f; --fg: #fff; --muted: rgba(255, 255, 255, .75); }
-    body.run #label, body.pre #label { color: var(--gold); }
+    body.run #label { color: var(--gold); }
+    /* Delayed start: "Draw starts in:" on top, smaller gold digits (display.js fits them to less height). */
+    body.pre #label { font-size: 9vh; min-height: 11vh; }
+    body.pre #clock { color: var(--gold); }
 
     #logo  { display: none; height: 50vh; margin-bottom: 4vh; }
     body.idle.has-logo #logo { display: block; }

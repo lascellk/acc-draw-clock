@@ -6,7 +6,8 @@
  * or jumps the clock.
  *
  * URL options:  ?url=<exec URL>   override config.js
- *               ?demo=95          run a local 95-min demo (no server); ?warn=1 sets warning minutes
+ *               ?demo=95          run a local 95-min demo (no server); ?warn=1 sets warning minutes,
+ *                                 ?delay=10 starts it in 10 min
  *               ?night=1          force the night blackout on (for testing)
  * Keys:         F = fullscreen, 1/2 = test start/end sounds
  */
@@ -101,11 +102,16 @@
         break;
       case 'pre':
         clock = fmt(v.ms);
-        sub = 'Starts in';
+        sub = [label, 'starts ' + timeOfDay(state.startsAt)].filter(Boolean).join(' · ');
+        label = 'Draw starts in:';
         break;
       case 'paused':
         clock = fmt(v.ms);
         sub = 'Paused';
+        if (v.colour === 'pre') {     // paused before the start
+          sub = [label, 'Paused'].filter(Boolean).join(' · ');
+          label = 'Draw starts in:';
+        }
         break;
       case 'over':
         clock = '00:00';
@@ -158,7 +164,8 @@
   // With the logo showing, the time of day gets the smaller space below it.
   let fitKey = '';
   function fitClock(text) {
-    const maxH = document.body.classList.contains('has-logo') ? 0.25 : 0.62;
+    const cls = document.body.classList;
+    const maxH = cls.contains('has-logo') ? 0.25 : cls.contains('pre') ? 0.4 : 0.62;
     const key = text.length + 'x' + innerWidth + 'x' + innerHeight + 'x' + maxH;
     if (key === fitKey) return;
     fitKey = key;
@@ -270,7 +277,7 @@
 
   if (demo) {
     const minutes = parseFloat(params.get('demo')) || 95;
-    const startsAt = Date.now() + 3000;
+    const startsAt = Date.now() + 3000 + (parseFloat(params.get('delay')) || 0) * 60000;
     state = {
       status: 'running', label: 'Demo — ' + minutes + ' min',
       startsAt, endsAt: startsAt + minutes * 60000,
