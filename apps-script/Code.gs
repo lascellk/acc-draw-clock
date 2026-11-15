@@ -12,6 +12,8 @@
  *   BLACKOUT_FROM / BLACKOUT_TO  "HH:MM" local time; the TV is black between them while no
  *                 draw is on the clock (default 23:00 to 08:00; the same time for both = off).
  *   LOG_SHEET_ID  Spreadsheet ID; every command is appended to its first sheet.
+ *   SYNC_KEY      Shared secret for the ACC Bonspiel Manager (its DRAW_CLOCK_KEY), which starts and
+ *                 follows bonspiel draws here. Unset = sync refused.
  */
 
 // Edit this list to change the preset buttons. warningMin is optional per preset.
@@ -59,6 +61,9 @@ function doGet(e) {
 function doPost(e) {
   try {
     const req = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (req.cmd === 'sync') {
+      return jsonOut_({ ok: true, state: sync_(req.key, req.arg || {}) });
+    }
     if (req.cmd === 'verify') {
       // PIN screen: check the PIN without changing anything.
       checkPin_(req.pin);
@@ -143,6 +148,53 @@ function command(pin, cmd, arg) {
     }
     saveState_(s);
     log_(cmd, arg);
+    return publicState_();
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ---- Sync from the ACC Bonspiel Manager ----
+// Its backend posts {cmd: 'sync', key, arg} whenever a bonspiel draw's timer changes, so the rink TV
+// matches the scoreboard. arg = {runId, label, status: 'running' | 'paused' | 'idle', startedAt, endsAt,
+// remainingMs, takeOver}. Only a start (takeOver) puts a bonspiel draw on the clock; a pause, adjust or
+// reset changes the clock only while it still shows that draw, so a league draw started here is left alone.
+function sync_(key, arg) {
+  const expected = getProp_('SYNC_KEY');
+  if (!expected || String(key || '') !== expected) throw new Error('Wrong sync key');
+  const runId = String(arg.runId || '');
+  if (!runId) throw new Error('Missing runId');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const now = Date.now();
+    const s = loadState_();
+    const showing = String(s.runId) === runId && s.status !== 'idle';
+    if (!showing && !arg.takeOver) return publicState_();
+    let next;
+    if (arg.status === 'idle') {
+      next = idleState_();
+      setBuzzer_('on');
+    } else {
+      const paused = arg.status === 'paused';
+      const remaining = Math.max(0, Number(arg.remainingMs) || 0);
+      next = {
+        status: paused ? 'paused' : 'running',
+        label: String(arg.label || 'Bonspiel draw').slice(0, 60),
+        startsAt: paused ? now : Math.min(Number(arg.startedAt) || now, now),
+        endsAt: paused ? now + remaining : Number(arg.endsAt),
+        remainingMsWhenPaused: paused ? remaining : null,
+        startDelayMsWhenPaused: paused ? 0 : null,
+        warningMin: warningDefault_(),
+        runId: runId,
+        source: 'bonspiel',
+      };
+      if (!paused && !(next.endsAt > 0)) throw new Error('Missing endsAt');
+      // Taking the clock over is a new draw on the TV: same buzzer rule as a start here.
+      if (!showing) setBuzzer_(buzzerOn_(s, now, 0) ? 'on' : 'off:' + runId);
+    }
+    saveState_(next);
+    log_('sync', arg);
     return publicState_();
   } finally {
     lock.releaseLock();

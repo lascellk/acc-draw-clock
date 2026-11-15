@@ -45,6 +45,7 @@ Avoid `clasp pull`/`clasp clone`: they overwrite `appsscript.json` with Google's
    | `WARNING_MIN` | Minutes before the end when the warning starts (default 15) |
    | `CLEAR_AFTER_MIN` | Minutes after time-up before the draw clears itself and the display goes back to the logo (default 25; `0` = stay until someone presses Stop) |
    | `LOG_SHEET_ID` | Spreadsheet ID to log every button press to |
+   | `SYNC_KEY` | Shared secret that lets the ACC Bonspiel Manager start and follow bonspiel draws on this clock (the same text as its `DRAW_CLOCK_KEY`). Unset = no link |
 6. **Deploy → New deployment → Web app**, with *Execute as: Me* and *Who has access: Anyone*. Authorize it, then copy the URL that ends in `/exec`.
    - Every later code change needs **Deploy → Manage deployments → Edit → Version: New version**. That keeps the same URL.
 7. The `/exec` URL also serves a control page, but give members the GitHub Pages link above instead. If you redeploy to a **new** URL, update `API_URL` in [control/index.html](control/index.html) and `stateUrl` in [display/config.js](display/config.js).
@@ -159,3 +160,7 @@ Install **Fully Kiosk Browser** and copy `display/` to the box's storage. Set:
 - Sounds only play on changes the display sees as they happen, so rebooting the TV mid-draw won't sound the start horn again.
 - The control page shows the same countdown as the display. It also has Start now / in 5-10-15 min, Pause/Resume, ±1 min and Stop.
 - **Custom** starts a countdown of any length from 1 to 240 minutes. Tap it, type the minutes, then Start. The **Warning** box is optional: type how many minutes before the end the screen turns yellow (`0` = no warning), or leave it blank for the automatic warning. Automatic means a quarter of the time, up to the usual 15 minutes, so short countdowns don't start out yellow; the empty box shows that value, e.g. "auto 11". The phone remembers both numbers.
+
+## Bonspiel link
+
+During a bonspiel, the ACC Bonspiel Manager runs this clock. Its **Start draw** puts the draw on the rink TV under the draw's name, at the same time as its scoreboard. Pausing, adjusting or resetting the bonspiel timer changes this clock too, but only while it still shows that draw, so a league draw started from the control page is never interrupted. On league nights nothing changes. The link needs `SYNC_KEY` here and the matching `DRAW_CLOCK_URL` / `DRAW_CLOCK_KEY` in the Bonspiel Manager (see its README).

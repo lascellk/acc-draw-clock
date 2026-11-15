@@ -47,6 +47,7 @@ pi/            Pi kiosk: deploy.sh (Git Bash on the PC) copies display/ to the P
   ```
 - Return `serverNow` so the display can correct for device clock drift.
 - Access: display/state endpoint read-only and open; controls require the club PIN (`CLUB_PIN` script property), checked server-side on every command.
+- Bonspiel link: the ACC Bonspiel Manager (`D:\DEV\ACC_Apps\ACC_Bonspiel_Manager`, repo `lascellk/ACC-Bonspiel-Manager`) drives this clock during bonspiels with `doPost {cmd: "sync", key, arg}`, authorized by the `SYNC_KEY` script property (its `DRAW_CLOCK_KEY`), not the PIN. Its Start draw takes the clock (`takeOver`, runId `bsp-<drawId>`); its pause/adjust/reset only apply while the clock still shows that draw, so league draws started here are never interrupted. Either app must keep working without the other. Unset `SYNC_KEY` = link off.
 
 ### 2. Control page
 Hosted on **GitHub Pages** (`control/` → https://lascellk.github.io/acc-draw-clock/), not Apps Script: Apps Script pages fail with "Sorry, unable to open the file" on phones signed in to several Google accounts. It calls the `/exec` JSON API (`doPost`, `?mode=config|state`) with plain fetch. It opens on a PIN screen; the controls show only after the server accepts the PIN. `noindex` keeps it out of search results. The repo is public (required for free Pages), so no secrets go in it.
