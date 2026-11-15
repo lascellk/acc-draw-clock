@@ -43,6 +43,7 @@
     #nowLabel { font-size: 18px; font-weight: 600; min-height: 22px; }
     #nowClock { font-size: 64px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
     #nowSub { font-size: 15px; min-height: 18px; opacity: .75; }
+    #bonspielNote { margin-top: 8px; padding: 6px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; background: rgba(0, 0, 0, .25); }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     button {
@@ -120,6 +121,7 @@
       <div id="nowLabel"></div>
       <div id="nowClock">--:--</div>
       <div id="nowSub">Loading…</div>
+      <div id="bonspielNote" hidden>Bonspiel draw: run it from the Bonspiel Manager</div>
     </section>
 
     <section class="card">
@@ -355,13 +357,24 @@
   // person doesn't start a draw with a delay left over from the last one.
   let wasLive = false;
 
+  // A draw started by the Bonspiel Manager can still be changed here (an emergency override), but only after a
+  // warning: the bonspiel scoreboard doesn't follow changes made here, so the two would show different times.
+  let bonspielOnClock = false;
+  function overrideOk(action) {
+    return !bonspielOnClock || confirm('This bonspiel draw is run from the Bonspiel Manager. ' + action +
+      ' here only changes the rink TV, not the bonspiel scoreboard, so they will show different times. Go ahead anyway?');
+  }
+
   document.querySelectorAll('[data-adj]').forEach(b => {
-    b.onclick = () => send('adjust', { minutes: Number(b.dataset.adj) });
+    b.onclick = () => { if (overrideOk('Changing the time')) send('adjust', { minutes: Number(b.dataset.adj) }); };
   });
 
-  $('pauseBtn').onclick = () => send(state && state.status === 'paused' ? 'resume' : 'pause');
+  $('pauseBtn').onclick = () => {
+    const resume = state && state.status === 'paused';
+    if (overrideOk(resume ? 'Resuming it' : 'Pausing it')) send(resume ? 'resume' : 'pause');
+  };
   $('stopBtn').onclick = () => {
-    if (confirm('Stop the clock?')) send('stop');
+    if (bonspielOnClock ? overrideOk('Stopping it') : confirm('Stop the clock?')) send('stop');
   };
 
   // While a change is in flight, don't let polling flip the box back.
@@ -373,7 +386,8 @@
 
   // ---- actions
   function startPreset(p) {
-    if (state && state.status !== 'idle' &&
+    if (bonspielOnClock) { if (!overrideOk('Replacing it with "' + p.label + '"')) return; }
+    else if (state && state.status !== 'idle' &&
         !confirm('A draw is already on the clock. Replace it with "' + p.label + '"?')) return;
     send('start', { presetId: p.id, minutes: p.minutes, warningMin: p.warningMin, delayMin: delayMin })
       .then(ok => { if (ok && p.id === 'custom') toggleCustom(false); });
@@ -447,6 +461,8 @@
     $('nowLabel').textContent = s.label || '';
     $('nowClock').textContent = clock;
     $('nowSub').textContent = sub;
+    bonspielOnClock = s.status !== 'idle' && s.source === 'bonspiel';
+    $('bonspielNote').hidden = !bonspielOnClock;
 
     const live = s.status !== 'idle';
     $('pauseBtn').disabled = !live;
