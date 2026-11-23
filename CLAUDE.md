@@ -14,6 +14,7 @@ control/       Member control page, published to GitHub Pages by .github/workflo
 display/       Local display page for the TV (index.html, display.js, config.js holds stateUrl)
 pi/            Pi kiosk: deploy.sh (Git Bash on the PC) copies display/ to the Pi and runs setup.sh there
 .clasp.json    Links apps-script/ to the Apps Script project
+print/         Git-ignored, only on keith-t430: kiosk infographic (infographic.html, rendered to infographic.png at 12.5" x 5.5", 300 dpi, by node print/render-infographic.cjs) and tv-screens/ screenshots
 ```
 
 ## Architecture
