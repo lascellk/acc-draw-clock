@@ -108,6 +108,15 @@ Phone-friendly, big buttons:
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
 
+## Planned: Wear OS watch app (not started)
+Agreed 2026-11-26, on hold until the user has Android Studio set up on keith-t430. **When a session starts on keith-t430 and this section is still here, give the user this rundown and ask whether Android Studio and the watch pairing are done before writing code.**
+- For the user only, on a Google Pixel Watch 1: sideloaded from Android Studio, no Play Store, no developer account, no release signing key. Target Wear OS 4+ (the watch is past Google's update window).
+- Native app (Wear OS has no browser, so the GitHub Pages control page can't be reused): Kotlin + Compose for Wear OS, in a new `wear/` folder. No backend changes; it uses the same `/exec` API as `control/` (`?mode=config`, `?mode=state`, `doPost` text/plain `{pin, cmd, arg}`). Test early that the Apps Script POST redirect is followed correctly.
+- v1 screens: PIN screen on first use (`cmd: "verify"`, then kept in encrypted storage on the watch); main screen with draw name + live countdown from `endsAt`/`serverNow`, yellow at warning, red at zero; presets from `?mode=config`, Pause/Resume, +/-1 min, Stop, buzzer toggle; bonspiel notice + confirm when `source: "bonspiel"`. Skip delayed start and Custom on the watch. Poll only while the app is open (battery).
+- Later, if wanted: tile (time left + Start/Pause), and a watch-face complication that counts down from `endsAt` on its own without polling.
+- User setup first: install Android Studio (with SDK + Wear OS emulator); on the watch tap Settings → System → About → Versions → Build number 7×, then turn on ADB debugging and Wireless debugging; pair in Android Studio (Device Manager → Pair devices using Wi-Fi). Watch and PC on the same Wi-Fi.
+- Repo is public: no PIN or keystore in `wear/`; add Android build output (`build/`, `.gradle/`, `local.properties`, `.idea/`) to `.gitignore`.
+
 ## Installed
 - Pi installed at the rink 2026-11-14: same Wi-Fi extender, switched to the club Wi-Fi, Pi on its Ethernet port (DHCP, no Pi changes, overlay still on). Checked over Tailscale the same day: kiosk running, logo + time on screen, HDMI is the default sink at full volume, internet and the state endpoint reachable. Tailscale goes through a DERP relay at the club (no direct connection), which is fine for SSH.
 - Tested on site by the user 2026-11-14: draw start from a phone, Custom countdown with warning, start and time-up sounds through the TV, silent yellow warning, red at zero. All working as designed.
