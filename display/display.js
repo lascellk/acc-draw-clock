@@ -213,10 +213,10 @@
   const SOUND_FILES = { start: 'sounds/start.mp3', end: 'sounds/end.mp3' };
 
   // [frequency Hz, start s, duration s]. Pitched high (1-2 kHz plus harmonics) to carry
-  // through small TV speakers and rink noise. Time-up is 5 blasts, not a fire alarm's 3.
+  // through small TV speakers and rink noise. Time-up is 4 blasts, not a fire alarm's 3.
   const TONES = {
     start: [[1500, 0, 0.3], [2000, 0.4, 0.8]],
-    end:   [0, 1.4, 2.8, 4.2, 5.6].map(at => [1000, at, 1.0]),
+    end:   [0, 1.4, 2.8, 4.2].map(at => [1000, at, 1.0]),
   };
   const TONE_GAIN = 0.9;
 
