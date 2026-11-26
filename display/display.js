@@ -212,11 +212,13 @@
   // Drop start.mp3 / end.mp3 into display/sounds/ to replace the built-in tones.
   const SOUND_FILES = { start: 'sounds/start.mp3', end: 'sounds/end.mp3' };
 
-  // [frequency Hz, start s, duration s]
+  // [frequency Hz, start s, duration s]. Pitched high (1-2 kHz plus harmonics) to carry
+  // through small TV speakers and rink noise. Time-up is 5 blasts, not a fire alarm's 3.
   const TONES = {
-    start: [[660, 0, 0.25], [880, 0.3, 0.6]],
-    end:   [[440, 0, 1.2], [440, 1.5, 2.0]],
+    start: [[1500, 0, 0.3], [2000, 0.4, 0.8]],
+    end:   [0, 1.4, 2.8, 4.2, 5.6].map(at => [1000, at, 1.0]),
   };
+  const TONE_GAIN = 0.9;
 
   function play(name) {
     const audio = new Audio(SOUND_FILES[name]);
@@ -243,8 +245,8 @@
       osc.type = name === 'end' ? 'sawtooth' : 'square';
       osc.frequency.value = freq;
       gain.gain.setValueAtTime(0, t0 + at);
-      gain.gain.linearRampToValueAtTime(0.35, t0 + at + 0.02);
-      gain.gain.setValueAtTime(0.35, t0 + at + dur - 0.05);
+      gain.gain.linearRampToValueAtTime(TONE_GAIN, t0 + at + 0.02);
+      gain.gain.setValueAtTime(TONE_GAIN, t0 + at + dur - 0.05);
       gain.gain.linearRampToValueAtTime(0, t0 + at + dur);
       osc.connect(gain).connect(c.destination);
       osc.start(t0 + at);
