@@ -1,0 +1,10 @@
+# Android / Gradle build output and per-machine settings
+build/
+.gradle/
+.kotlin/
+local.properties
+.idea/
+*.iml
+captures/
+*.jks
+*.keystore

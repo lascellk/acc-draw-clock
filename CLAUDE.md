@@ -108,8 +108,8 @@ Phone-friendly, big buttons:
 - Lockout after repeated wrong PINs (not built yet)
 - Sound files / horn relay
 
-## Planned: Wear OS watch app (setup done, code not started)
-Agreed 2026-11-26. Android Studio and watch pairing done on keith-t430 2026-11-27; next step is writing v1 in `wear/`.
+## Planned: Wear OS watch app (project skeleton builds, v1 not started)
+Agreed 2026-11-26. Android Studio and watch pairing done on keith-t430 2026-11-27; skeleton in `wear/` (Gradle 9.9.3 wrapper, AGP 9.5.3 with built-in Kotlin, Kotlin 2.4.21 compose plugin, Wear Compose Material3 1.7.2, compileSdk 37, minSdk 33) builds with `./gradlew assembleDebug`, JAVA_HOME = Android Studio's `jbr`. Next step: v1 screens.
 - For the user only, on a Google Pixel Watch 1 (checked 2026-11-27: Android 15 / API 35, Wear OS 6, build BW1A.260305.003): sideloaded from Android Studio, no Play Store, no developer account, no release signing key. minSdk 33 (Wear OS 4) is enough.
 - Native app (Wear OS has no browser, so the GitHub Pages control page can't be reused): Kotlin + Compose for Wear OS, in a new `wear/` folder. No backend changes; it uses the same `/exec` API as `control/` (`?mode=config`, `?mode=state`, `doPost` text/plain `{pin, cmd, arg}`). Test early that the Apps Script POST redirect is followed correctly.
 - v1 screens: PIN screen on first use (`cmd: "verify"`, then kept in encrypted storage on the watch); main screen with draw name + live countdown from `endsAt`/`serverNow`, yellow at warning, red at zero; presets from `?mode=config`, Pause/Resume, +/-1 min, Stop, buzzer toggle; bonspiel notice + confirm when `source: "bonspiel"`. Skip delayed start and Custom on the watch. Poll only while the app is open (battery).
