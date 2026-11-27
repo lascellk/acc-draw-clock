@@ -119,5 +119,5 @@ Agreed 2026-11-26, on hold until the user has Android Studio set up on keith-t43
 
 ## Installed
 - Pi installed at the rink 2026-11-14: same Wi-Fi extender, switched to the club Wi-Fi, Pi on its Ethernet port (DHCP, no Pi changes, overlay still on). Checked over Tailscale the same day: kiosk running, logo + time on screen, HDMI is the default sink at full volume, internet and the state endpoint reachable. Tailscale goes through a DERP relay at the club (no direct connection), which is fine for SSH.
-- **Not yet on the Pi:** louder built-in tones (2026-11-26, `display.js`: gain 0.35 → 0.9, start 1.5/2 kHz, time-up 4 × 1 s blasts at 1 kHz sawtooth). Made on a PC that can't reach the Pi (`e110471`, not on the tailnet). From keith-t430: overlay off, `sh pi/deploy.sh`, overlay on, then the user checks loudness at the rink. Remove this line once done.
+- Louder built-in tones (`display.js`: gain 0.35 → 0.9, start 1.5/2 kHz, time-up 4 × 1 s blasts at 1 kHz) deployed to the Pi 2026-11-27 with the overlay off, then overlay back on; confirmed after reboot. **Still to do:** the user checks loudness at the rink.
 - Tested on site by the user 2026-11-14: draw start from a phone, Custom countdown with warning, start and time-up sounds through the TV, silent yellow warning, red at zero. All working as designed.
