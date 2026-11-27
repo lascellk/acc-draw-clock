@@ -19,6 +19,10 @@ enum class Screen { Loading, Pin, Clock }
 class ClockViewModel(app: Application) : AndroidViewModel(app) {
     private val pins = PinStore(app)
     private var pin = ""
+    private val prefs = app.getSharedPreferences("custom", android.content.Context.MODE_PRIVATE)
+
+    /** The Custom countdown's minutes, remembered from last time (like the phone page). */
+    var customMinutes by mutableStateOf(prefs.getInt("minutes", 30)); private set
 
     var screen by mutableStateOf(Screen.Loading); private set
     var config by mutableStateOf<Config?>(null); private set
@@ -111,6 +115,13 @@ class ClockViewModel(app: Application) : AndroidViewModel(app) {
         state = s
         offsetMs = s.serverNow - System.currentTimeMillis()
         offline = false
+    }
+
+    /** A one-off countdown; no warningMin, so the server picks the automatic warning (a quarter, up to the usual). */
+    fun startCustom(minutes: Int) {
+        customMinutes = minutes
+        prefs.edit().putInt("minutes", minutes).apply()
+        send("start", JSONObject().put("presetId", "custom").put("minutes", minutes).put("delayMin", 0))
     }
 
     fun startPreset(p: Preset) = send("start", JSONObject().put("presetId", p.id).put("minutes", p.minutes).put("delayMin", 0))

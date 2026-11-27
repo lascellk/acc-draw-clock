@@ -3,10 +3,13 @@ package ca.almontecurling.drawclock
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +45,8 @@ import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.FilledTonalButton
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.OutlinedButton
+import androidx.wear.compose.material3.Picker
+import androidx.wear.compose.material3.rememberPickerState
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
@@ -146,12 +153,30 @@ private fun ClockScreen(vm: ClockViewModel) {
         }
     }
     var ask by remember { mutableStateOf<Ask?>(null) }
+    var custom by remember { mutableStateOf(false) }
     val v = s?.let { clockView(it, now + vm.offsetMs) }
     // A bonspiel draw is run from the Bonspiel Manager scoreboard; changing it here only changes the TV.
     fun guarded(action: String, run: () -> Unit) {
         if (v?.bonspiel == true) {
             ask = Ask("Bonspiel draw", "$action here only changes the rink TV, not the scoreboard. Go ahead?", run)
         } else run()
+    }
+    // Starting over a draw that's still on the clock asks first, as on the phone.
+    fun confirmStart(label: String, run: () -> Unit) = when {
+        v?.bonspiel == true -> guarded("Replacing it with \"$label\"", run)
+        v?.live == true -> ask = Ask("Replace the draw?", "Start \"$label\" instead?", run)
+        else -> run()
+    }
+
+    if (custom) {
+        BackHandler { custom = false }
+        CustomScreen(
+            initial = vm.customMinutes,
+            max = vm.config?.maxCustomMin ?: 240,
+            onStart = { m -> custom = false; confirmStart("$m-min Countdown") { vm.startCustom(m) } },
+            onCancel = { custom = false },
+        )
+        return
     }
 
     val listState = rememberScalingLazyListState()
@@ -220,18 +245,18 @@ private fun ClockScreen(vm: ClockViewModel) {
             vm.config?.presets?.forEach { p ->
                 item {
                     FilledTonalButton(
-                        onClick = {
-                            val replace = "Replacing it with \"${p.label}\""
-                            when {
-                                v?.bonspiel == true -> guarded(replace) { vm.startPreset(p) }
-                                v?.live == true -> ask = Ask("Replace the draw?", "Start \"${p.label}\" instead?") { vm.startPreset(p) }
-                                else -> vm.startPreset(p)
-                            }
-                        },
+                        onClick = { confirmStart(p.label) { vm.startPreset(p) } },
                         enabled = !vm.busy, modifier = Modifier.fillMaxWidth(),
                         secondaryLabel = { Text("${p.minutes} min") },
                     ) { Text("Start ${p.label}") }
                 }
+            }
+            item {
+                FilledTonalButton(
+                    onClick = { custom = true },
+                    enabled = !vm.busy && vm.config != null, modifier = Modifier.fillMaxWidth(),
+                    secondaryLabel = { Text("Set minutes") },
+                ) { Text("Custom") }
             }
             item {
                 OutlinedButton(onClick = { vm.lock() }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
@@ -250,4 +275,46 @@ private fun ClockScreen(vm: ClockViewModel) {
         confirmButton = { AlertDialogDefaults.ConfirmButton(onClick = { a?.yes?.invoke(); ask = null }) },
         dismissButton = { AlertDialogDefaults.DismissButton(onClick = { ask = null }) },
     )
+}
+
+/** Custom countdown: pick the minutes (swipe or turn the crown), then Start. The warning is automatic. */
+@Composable
+private fun CustomScreen(initial: Int, max: Int, onStart: (Int) -> Unit, onCancel: () -> Unit) {
+    val picker = rememberPickerState(initialNumberOfOptions = max, initiallySelectedIndex = (initial - 1).coerceIn(0, max - 1))
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() } // so the crown turns the picker
+    val minutes = picker.selectedOptionIndex + 1
+    ScreenScaffold {
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text("Custom countdown", style = MaterialTheme.typography.labelMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Picker(
+                    state = picker,
+                    contentDescription = { "${picker.selectedOptionIndex + 1} minutes" },
+                    modifier = Modifier.size(width = 72.dp, height = 96.dp).focusRequester(focus).focusable(),
+                ) { i ->
+                    Text("${i + 1}", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                }
+                Text("min", modifier = Modifier.padding(start = 4.dp))
+            }
+            Text(
+                "warning at ${minOf(15, minutes / 4)} min left",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
+                OutlinedButton(onClick = onCancel, modifier = Modifier.size(width = 64.dp, height = 40.dp),
+                    contentPadding = ButtonDefaults.CompactButtonContentPadding) {
+                    Text("Cancel", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                }
+                Button(onClick = { onStart(minutes) }, modifier = Modifier.size(width = 64.dp, height = 40.dp),
+                    contentPadding = ButtonDefaults.CompactButtonContentPadding) {
+                    Text("Start", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                }
+            }
+        }
+    }
 }

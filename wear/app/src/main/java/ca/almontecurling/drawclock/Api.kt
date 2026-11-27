@@ -69,7 +69,7 @@ object Api {
 
 data class Preset(val id: String, val label: String, val minutes: Int)
 
-data class Config(val presets: List<Preset>, val pinRequired: Boolean) {
+data class Config(val presets: List<Preset>, val pinRequired: Boolean, val maxCustomMin: Int = 240) {
     companion object {
         fun from(j: JSONObject): Config {
             val arr = j.optJSONArray("presets")
@@ -77,7 +77,7 @@ data class Config(val presets: List<Preset>, val pinRequired: Boolean) {
                 val p = arr!!.getJSONObject(i)
                 Preset(p.getString("id"), p.getString("label"), p.getInt("minutes"))
             }
-            return Config(presets, j.optBoolean("pinRequired"))
+            return Config(presets, j.optBoolean("pinRequired"), j.optInt("maxCustomMin", 240).coerceAtLeast(1))
         }
     }
 }
