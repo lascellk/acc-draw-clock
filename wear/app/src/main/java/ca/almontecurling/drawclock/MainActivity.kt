@@ -48,7 +48,6 @@ import androidx.wear.compose.material3.OutlinedButton
 import androidx.wear.compose.material3.Picker
 import androidx.wear.compose.material3.rememberPickerState
 import androidx.wear.compose.material3.ScreenScaffold
-import androidx.wear.compose.material3.SwitchButton
 import androidx.wear.compose.material3.Text
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -234,13 +233,6 @@ private fun ClockScreen(vm: ClockViewModel) {
                         enabled = !vm.busy, modifier = Modifier.fillMaxWidth(),
                     ) { Text("Stop") }
                 }
-            }
-            item {
-                SwitchButton(
-                    checked = s?.buzzer != false,
-                    onCheckedChange = { vm.setBuzzer(it) },
-                    enabled = !vm.busy && s != null, modifier = Modifier.fillMaxWidth(),
-                ) { Text("Buzzer") }
             }
             vm.config?.presets?.forEach { p ->
                 item {

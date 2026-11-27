@@ -128,7 +128,6 @@ class ClockViewModel(app: Application) : AndroidViewModel(app) {
     fun pauseOrResume() = send(if (state?.status == "paused") "resume" else "pause")
     fun adjust(minutes: Int) = send("adjust", JSONObject().put("minutes", minutes))
     fun stop() = send("stop")
-    fun setBuzzer(on: Boolean) = send("buzzer", JSONObject().put("on", on))
 
     private fun send(cmd: String, arg: JSONObject = JSONObject()) {
         if (busy) return
